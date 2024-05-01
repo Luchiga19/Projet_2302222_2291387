@@ -5,22 +5,6 @@ VisualStudioVersion = 16.0.34601.136
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Projet_2302222_2291387", "Projet_2302222_2291387\Projet_2302222_2291387.vcxproj", "{F89D2757-76C3-45D0-A5EA-EDB61B5C8C3B}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Piece_Images", "Piece_Images", "{3163C384-985D-42D5-97D2-1E765552562C}"
-	ProjectSection(SolutionItems) = preProject
-		..\..\..\..\..\chess images\resized\black_bishop.png = ..\..\..\..\..\chess images\resized\black_bishop.png
-		..\..\..\..\..\chess images\resized\black_king.png = ..\..\..\..\..\chess images\resized\black_king.png
-		..\..\..\..\..\chess images\resized\black_knight.png = ..\..\..\..\..\chess images\resized\black_knight.png
-		..\..\..\..\..\chess images\resized\black_pawn.png = ..\..\..\..\..\chess images\resized\black_pawn.png
-		..\..\..\..\..\chess images\resized\black_queen.png = ..\..\..\..\..\chess images\resized\black_queen.png
-		..\..\..\..\..\chess images\resized\black_rook.png = ..\..\..\..\..\chess images\resized\black_rook.png
-		..\..\..\..\..\chess images\resized\white_bishop.png = ..\..\..\..\..\chess images\resized\white_bishop.png
-		..\..\..\..\..\chess images\resized\white_king.png = ..\..\..\..\..\chess images\resized\white_king.png
-		..\..\..\..\..\chess images\resized\white_knight.png = ..\..\..\..\..\chess images\resized\white_knight.png
-		..\..\..\..\..\chess images\resized\white_pawn.png = ..\..\..\..\..\chess images\resized\white_pawn.png
-		..\..\..\..\..\chess images\resized\white_queen.png = ..\..\..\..\..\chess images\resized\white_queen.png
-		..\..\..\..\..\chess images\resized\white_rook.png = ..\..\..\..\..\chess images\resized\white_rook.png
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64

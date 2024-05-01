@@ -55,46 +55,6 @@ namespace piecetype {
 		static inline int _kingCount = 0;
 	};
 	
-	
-	class Queen : public Piece {
-	public:
-		Queen(Color color, Pos pos);
-
-		std::string getName() override;
-	};
-	
-	
-	class Rook : public Piece {
-	public:
-		Rook(Color color, Pos pos);
-
-		std::string getName() override;
-	};
-	
-	
-	class Knight : public Piece {
-	public:
-		Knight(Color color, Pos pos);
-
-		std::string getName() override;
-	};
-	
-	
-	class Bishop : public Piece {
-	public:
-		Bishop(Color color, Pos pos);
-
-		std::string getName() override;
-	};
-
-
-	class Pawn : public Piece {
-	public:
-		Pawn(Color color, Pos pos);
-
-		std::string getName() override;
-	};
-
 
 	class TooManyKingsException : public std::logic_error {
 	public:

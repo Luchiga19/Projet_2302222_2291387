@@ -19,9 +19,6 @@ Square::Square(QWidget* parent, Pos pos) :
 	_piece(nullptr)
 {
 	setFixedSize(SQUARE_SIZE, SQUARE_SIZE);
-	_label = new QLabel(this);
-	if (_piece != nullptr)
-		_label->setText(QString::fromStdString(_piece->getName()));
 }
 
 void Square::updateSquare() {
@@ -30,7 +27,6 @@ void Square::updateSquare() {
 
 void Square::paintEvent(QPaintEvent* event) {
 	QPainter painter(this);
-	painter.setRenderHint(QPainter::Antialiasing);
 
 	painter.fillRect(rect(), _color); // Fill the entire widget area with red
 
@@ -69,10 +65,8 @@ void Chessboard::populateStandard() {
 	try {
 		Square* square = _board[0][3];
 		square->_piece = make_unique<King>(King(King::Color::BLACK, Pos(0, 3)));
-		square->_label->setText(QString::fromStdString(square->_piece->getName()));
 		square = _board[7][3];
 		square->_piece = make_unique<King>(King(King::Color::WHITE, Pos(7, 3)));
-		square->_label->setText(QString::fromStdString(square->_piece->getName()));
 	}
 
 	catch (const TooManyKingsException) {

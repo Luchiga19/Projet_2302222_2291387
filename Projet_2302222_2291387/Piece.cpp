@@ -34,7 +34,7 @@ King::King(Color color, Pos pos) : Piece(color, pos) {
 	}
 
 	if (color == Color::BLACK) {
-		_image = QPixmap("Piece_Images/black_king.png");
+		_image = QPixmap("Images/black_king.png");
 	}
 }
 
