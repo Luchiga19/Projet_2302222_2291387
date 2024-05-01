@@ -23,6 +23,7 @@ namespace interface {
 		void updateSquare();
 
 	private:
+		piecetype::Pos _pos;
 		std::unique_ptr<piecetype::Piece> _piece;
 		QColor _color;
 		QLabel* _label;

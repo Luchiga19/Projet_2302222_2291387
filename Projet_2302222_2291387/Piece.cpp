@@ -1,47 +1,43 @@
 #include "Piece.h"
 
 using namespace std;
+using namespace piecetype;
 
 
-piecetype::Pos::Pos(int row, int col) : _row(row), _col(col) {}
+Pos::Pos(int row, int col) : _row(row), _col(col) {}
 
-piecetype::Pos::Pos(const Pos& other) : _row(other._row), _col(other._col) {}
+Pos::Pos(const Pos& other) : _row(other._row), _col(other._col) {}
 
-piecetype::Pos piecetype::Pos::operator+(Pos other) {
+Pos Pos::operator+(Pos other) {
 	return Pos(_row + other._row, _col + other._col);
 }
 
 
-piecetype::Piece::Piece(Color color, Pos pos) :
+Piece::Piece(Color color, Pos pos) :
 	_color(color), _pos(pos)
-{
-	
-}
+{ }
 
-void piecetype::Piece::move(Pos newPos) {
+void Piece::move(Pos newPos) {
 	_pos = newPos;
 	// add emission of signal to adjuste the view
 }
 
-piecetype::Piece::~Piece() {}
+Piece::~Piece() {}
 
 
-piecetype::King::King(Color color, Pos pos) : Piece(color, pos) {
+King::King(Color color, Pos pos) : Piece(color, pos) {
 	if (_kingCount < 2) {
 		_kingCount++;
 	}
 	else {
 		throw TooManyKingsException("Trying to generate more than 2 kings.");
 	}
+
+	if (color == Color::BLACK) {
+		_image = QPixmap("Piece_Images/black_king.png");
+	}
 }
 
-string piecetype::King::getName() {
+string King::getName() const {
 	return "King";
-}
-
-
-piecetype::Empty::Empty(Pos pos) : Piece(Color::NO_COLOR, pos) {}
-
-string piecetype::Empty::getName() {
-	return "Empty";
 }

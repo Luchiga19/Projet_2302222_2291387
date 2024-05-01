@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdexcept>
+#include <QPixmap>
 
 namespace piecetype {
 
@@ -21,8 +22,7 @@ namespace piecetype {
 	public:
 		enum class Color {
 			BLACK,
-			WHITE,
-			NO_COLOR
+			WHITE
 		};
 
 		Piece(Color color, Pos pos);
@@ -31,12 +31,14 @@ namespace piecetype {
 
 		virtual ~Piece() = 0;
 
-		virtual std::string getName() = 0;
-		Pos getPos() { return _pos; };
+		virtual std::string getName() const = 0;
+		Pos getPos() const { return _pos; };
+		QPixmap getImage() const { return _image; }
 
 	protected:
 		// array validMoves[]; add to ensure new move pos is in the array
 		Pos _pos;
+		QPixmap _image;
 
 	private:
 		Color _color;
@@ -47,17 +49,10 @@ namespace piecetype {
 	public:
 		King(Color color, Pos pos);
 
-		std::string getName() override;
+		std::string getName() const override;
 
 	private:
 		static inline int _kingCount = 0;
-	};
-
-
-	class Empty : public Piece {
-	public:
-		Empty(Pos pos);
-		std::string getName() override;
 	};
 
 

@@ -9,27 +9,36 @@
 
 
 using namespace std;
+using namespace interface;
+using namespace piecetype;
 
 
-interface::Square::Square(QWidget* parent, piecetype::Pos pos) :
+Square::Square(QWidget* parent, Pos pos) :
+	_pos(pos),
 	QWidget(parent),
-	_piece(make_unique<piecetype::Empty>(piecetype::Empty(pos)))
+	_piece(nullptr)
 {
 	setFixedSize(SQUARE_SIZE, SQUARE_SIZE);
 	_label = new QLabel(this);
-	_label->setText(QString::fromStdString(_piece->getName()));
+	if (_piece != nullptr)
+		_label->setText(QString::fromStdString(_piece->getName()));
 }
 
-void interface::Square::updateSquare() {
+void Square::updateSquare() {
 	update();
 }
 
-void interface::Square::paintEvent(QPaintEvent* event) {
+void Square::paintEvent(QPaintEvent* event) {
 	QPainter painter(this);
+	painter.setRenderHint(QPainter::Antialiasing);
+
 	painter.fillRect(rect(), _color); // Fill the entire widget area with red
+
+	if (_piece != nullptr)
+		painter.drawPixmap(rect(), _piece->getImage());
 }
 
-interface::Chessboard::Chessboard(QWidget* parent) :
+Chessboard::Chessboard(QWidget* parent) :
 	QWidget(parent)
 {
 	QGridLayout* layout = new QGridLayout(this);
@@ -37,7 +46,7 @@ interface::Chessboard::Chessboard(QWidget* parent) :
 
 	for (int row = 0; row < BOARD_SIZE; row++) {
 		for (int col = 0; col < BOARD_SIZE; col++) {
-			Square *square = new Square(this, piecetype::Pos(row, col));
+			Square *square = new Square(this, Pos(row, col));
 			square->_color = ((row + col) % 2 == 0 ? Qt::white : QColor(255, 209, 181));
 			layout->addWidget(square, row, col);
 			_board[row][col] = square;
@@ -52,13 +61,11 @@ interface::Chessboard::Chessboard(QWidget* parent) :
 	setLayout(layout);
 };
 
-interface::Square** interface::Chessboard::operator[] (int i) {
+Square** Chessboard::operator[] (int i) {
 	return _board[i];
 }
 
-void interface::Chessboard::populateStandard() {
-	using piecetype::King;
-	using piecetype::Pos;
+void Chessboard::populateStandard() {
 	try {
 		Square* square = _board[0][3];
 		square->_piece = make_unique<King>(King(King::Color::BLACK, Pos(0, 3)));
@@ -68,7 +75,7 @@ void interface::Chessboard::populateStandard() {
 		square->_label->setText(QString::fromStdString(square->_piece->getName()));
 	}
 
-	catch (const piecetype::TooManyKingsException) {
+	catch (const TooManyKingsException) {
 		cout << "Attempting to initialize more kings than permitted" << endl;
 		QMessageBox::warning(nullptr, "Warning", "Attempting to initialize more kings than permitted");
 	}
