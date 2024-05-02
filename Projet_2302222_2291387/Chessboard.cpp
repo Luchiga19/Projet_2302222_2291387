@@ -50,11 +50,31 @@ void Square::mousePressEvent(QMouseEvent* event) {
 }
 
 
-Chessboard::iterator::iterator(Square*** ptr, int row, int col)
-	: _ptr(ptr), _row(row), _col(col) {}
+Chessboard::iterator::iterator(Square* (*ptr)[BOARD_SIZE], int row, int col)
+	: _row(row), _col(col) 
+{
+	_ptr = ptr;
+}
+
+Chessboard::iterator& Chessboard::iterator::operator++() {
+	_col++;
+	if (_col >= BOARD_SIZE) {
+		_col = 0;
+		_row++;
+	}
+	return *this;
+}
 
 Square*& Chessboard::iterator::operator*() {
 	return _ptr[_row][_col];
+}
+
+bool Chessboard::iterator::operator==(const iterator& it) {
+	return _ptr == it._ptr && _row == it._row && _col == it._col;
+}
+
+bool Chessboard::iterator::operator!=(const iterator& it) {
+	return !(*this == it);
 }
 
 Chessboard::Chessboard(QWidget* parent) :
@@ -129,19 +149,15 @@ void Chessboard::insertAggroMove(const Pos& pos, const Piece::Color& color) {
 }
 
 void Chessboard::updateAllValidMoves() {
-	Square* currentSquare;
 	vector<King*> kings;
-	for (int i = 0; i < BOARD_SIZE; i++) {
-		for (int j = 0; j < BOARD_SIZE; j++) {
-			currentSquare = _board[i][j];
-			if (dynamic_cast<King*>(currentSquare->_piece.get())) {
-				King* king = dynamic_cast<King*>(currentSquare->_piece.get());
-				king->updateAggroMoves(*this);
-				kings.push_back(king);
-			}
-			else
-				currentSquare->_piece->updateValidMoves(*this);
+	for (Square* currentSquare : *this) {
+		if (dynamic_cast<King*>(currentSquare->_piece.get())) {
+			King* king = dynamic_cast<King*>(currentSquare->_piece.get());
+			king->updateAggroMoves(*this);
+			kings.push_back(king);
 		}
+		else if (currentSquare->_piece != nullptr)
+			currentSquare->_piece->updateValidMoves(*this);
 	}
 
 	kings[0]->updateValidMoves(*this);

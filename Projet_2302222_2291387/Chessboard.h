@@ -41,20 +41,35 @@ namespace interface {
 
 
 	class Chessboard : public QWidget {
+		Q_OBJECT
+
 	public:
 		static constexpr int BOARD_SIZE = 8;
 
 		class iterator {
 		public: 
-			iterator(Square*** ptr, int row = 0, int col = 0);
+			iterator(Square* (*ptr)[BOARD_SIZE], int row = 0, int col = 0);
 
+			iterator& operator++();
 			Square*& operator*();
+			bool operator==(const iterator& it);
+			bool operator!=(const iterator& it);
+
 
 
 		private:
-			Square*** _ptr;
+			Square* _sourceSquare;
+			Square* (*_ptr)[BOARD_SIZE];
 			int _row, _col;
 		};
+
+		iterator begin() {
+			return iterator(_board);
+		}
+
+		iterator end() {
+			return iterator(_board, BOARD_SIZE, 0);
+		}
 
 		Chessboard(QWidget* parent);
 

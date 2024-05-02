@@ -39,7 +39,7 @@
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
     <QtInstall>6.7.0_msvc2019_64</QtInstall>
-    <QtModules>widgets</QtModules>
+    <QtModules>gui;widgets</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
     <QtPlugin>false</QtPlugin>
   </PropertyGroup>

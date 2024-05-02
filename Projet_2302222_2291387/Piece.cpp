@@ -87,10 +87,8 @@ void King::updateAggroMoves(interface::Chessboard& board) {
 			Pos addedPos(i, j);
 			_pos += addedPos;
 
-			if (!_pos.isValid())
-				break;
-
-			board.insertAggroMove(_pos, getColor());
+			if (_pos.isValid())
+				board.insertAggroMove(_pos, getColor());
 
 			_pos = initialPos;
 		}
@@ -110,10 +108,8 @@ void King::updateValidMoves(interface::Chessboard& board) {
 			Pos addedPos(i, j);
 			_pos += addedPos;
 
-			if (!_pos.isValid() || board.isPosInAggroMoves(_pos, getColor()) || board[_pos]->isSameColorPiece(*this))
-				continue;
-			
-			_validMoves.push_back(_pos);
+			if (_pos.isValid() && !board.isPosInAggroMoves(_pos, getColor()) && !board[_pos]->isSameColorPiece(*this))
+				_validMoves.push_back(_pos);
 
 			_pos = initialPos;
 		}
