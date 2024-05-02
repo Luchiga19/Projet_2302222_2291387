@@ -162,3 +162,43 @@ void Queen::updateValidMoves(Chessboard& board) {
 		}
 	}
 }
+
+
+Bishop::Bishop(Color color, Pos pos) : Piece(color, pos) {
+	if (color == Color::BLACK) {
+		_image = QPixmap("Images/black_bishop.png");
+	}
+
+	else if (color == Color::WHITE) {
+		_image = QPixmap("Images/white_bishop.png");
+	}
+}
+
+void Bishop::updateValidMoves(Chessboard& board) {
+	_validMoves.clear();
+	Pos initialPos = _pos;
+
+	for (int i = -1; i <= 1; i += 2) {
+		for (int j = -1; j <= 1; j += 2) {
+
+			while (true) {
+				Pos addedPos(i, j);
+				_pos += addedPos;
+
+				if (!_pos.isValid())
+					break;
+
+				board.insertAggroMove(_pos, getColor());
+
+				if (board[_pos]->isSameColorPiece(*this))
+					break;
+
+				_validMoves.push_back(_pos);
+
+				if (!board[_pos]->isEmpty())
+					break;
+			}
+			_pos = initialPos;
+		}
+	}
+}

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QObject>
+#include <QMouseEvent>
 #include <QWidget>
 #include <memory>
 #include "Piece.h"
@@ -25,6 +27,12 @@ namespace interface {
 		bool isEmpty() const;
 		bool isSameColorPiece(const piecetype::Piece& other) const;
 
+	signals:
+		void squareClicked(Square* square);
+
+	protected:
+		void mousePressEvent(QMouseEvent* event) override;
+
 	private:
 		piecetype::Pos _pos;
 		std::unique_ptr<piecetype::Piece> _piece;
@@ -35,6 +43,18 @@ namespace interface {
 	class Chessboard : public QWidget {
 	public:
 		static constexpr int BOARD_SIZE = 8;
+
+		class iterator {
+		public: 
+			iterator(Square*** ptr, int row = 0, int col = 0);
+
+			Square*& operator*();
+
+
+		private:
+			Square*** _ptr;
+			int _row, _col;
+		};
 
 		Chessboard(QWidget* parent);
 

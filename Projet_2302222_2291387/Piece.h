@@ -80,8 +80,18 @@ namespace piecetype {
 	};
 
 
+	class Bishop : public Piece {
+	public:
+		Bishop(Color color, Pos pos);
+
+		void updateValidMoves(interface::Chessboard& board) override;
+	};
+
+
 	class TooManyKingsException : public std::logic_error {
 	public:
 		using logic_error::logic_error;
 	};
+
+
 }

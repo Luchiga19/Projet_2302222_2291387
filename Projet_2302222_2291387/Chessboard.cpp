@@ -1,4 +1,6 @@
 #include "Chessboard.h"
+#include <QObject>
+#include <QMouseEvent>
 #include <QWidget>
 #include <QGridLayout>
 #include "piece.h"
@@ -42,6 +44,18 @@ bool Square::isSameColorPiece(const Piece& other) const {
 	return false;
 }
 
+void Square::mousePressEvent(QMouseEvent* event) {
+	if (event->button() == Qt::LeftButton)
+		emit squareClicked(this);
+}
+
+
+Chessboard::iterator::iterator(Square*** ptr, int row, int col)
+	: _ptr(ptr), _row(row), _col(col) {}
+
+Square*& Chessboard::iterator::operator*() {
+	return _ptr[_row][_col];
+}
 
 Chessboard::Chessboard(QWidget* parent) :
 	QWidget(parent)
