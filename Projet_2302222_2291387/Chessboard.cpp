@@ -19,6 +19,7 @@ using namespace piecetype;
 
 
 Square::Square(QWidget* parent, Pos pos) :
+	_contour(QPixmap("Images/contour.png")),
 	_pos(pos),
 	QWidget(parent),
 	_piece(nullptr)
@@ -33,6 +34,9 @@ void Square::paintEvent(QPaintEvent* event) {
 
 	if (_piece != nullptr)
 		painter.drawPixmap(rect(), _piece->getImage());
+	
+	if (_isContour) 
+		painter.drawPixmap(rect(), _contour);
 }
 
 void Square::movePiece(Square* square) {
@@ -178,26 +182,26 @@ void Chessboard::updateAllValidMoves() {
 	kings[1]->updateValidMoves(*this);
 }
 
-void Chessboard::setHighlightValidMoves(const char* highlight) {
+void Chessboard::setHighlightValidMoves(bool set) {
 	for (const Pos& pos : _sourceSquare->_piece->getValidMoves()) {
-		(*this)[pos]->setStyleSheet("border: 4px solid gray;");
+		(*this)[pos]->_isContour = set;
+		(*this)[pos]->update();
 	}
-	_sourceSquare->update();
 }
 
 void Chessboard::onSquareClick(Square* square) {
 	if (_sourceSquare == nullptr && !square->isEmpty() && square->_piece->getColor() == _currentPlayer) {
 		_sourceSquare = square;
-		setHighlightValidMoves(HIGHLIGHT);
+		setHighlightValidMoves(true);
 	}
 
 	else if (_sourceSquare == square) {
-		setHighlightValidMoves(EMPTY);
+		setHighlightValidMoves(false);
 		_sourceSquare = nullptr;
 	}
 
 	else if (_sourceSquare != nullptr && _sourceSquare->_piece->isInValidMoves(square->_pos)) {
-		setHighlightValidMoves(EMPTY);
+		setHighlightValidMoves(false);
 		_sourceSquare->movePiece(square);
 		_sourceSquare = nullptr;
 		_currentPlayer = (_currentPlayer == Piece::Color::WHITE) ? Piece::Color::BLACK : Piece::Color::WHITE;
