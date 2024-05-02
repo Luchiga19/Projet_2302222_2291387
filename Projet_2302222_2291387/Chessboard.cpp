@@ -6,6 +6,8 @@
 #include <QMessageBox>
 #include <QPainter>
 #include <QLabel>
+#include <vector>
+#include <algorithm>
 
 
 using namespace std;
@@ -21,10 +23,6 @@ Square::Square(QWidget* parent, Pos pos) :
 	setFixedSize(SQUARE_SIZE, SQUARE_SIZE);
 }
 
-void Square::updateSquare() {
-	update();
-}
-
 void Square::paintEvent(QPaintEvent* event) {
 	QPainter painter(this);
 
@@ -33,6 +31,17 @@ void Square::paintEvent(QPaintEvent* event) {
 	if (_piece != nullptr)
 		painter.drawPixmap(rect(), _piece->getImage());
 }
+
+bool Square::isEmpty() const {
+	return _piece == nullptr;
+}
+
+bool Square::isSameColorPiece(const Piece& other) const {
+	if (!isEmpty())
+		return _piece->getColor() == other.getColor();
+	return false;
+}
+
 
 Chessboard::Chessboard(QWidget* parent) :
 	QWidget(parent)
@@ -46,7 +55,6 @@ Chessboard::Chessboard(QWidget* parent) :
 			square->_color = ((row + col) % 2 == 0 ? Qt::white : QColor(255, 209, 181));
 			layout->addWidget(square, row, col);
 			_board[row][col] = square;
-			square->updateSquare();
 		}
 	}
 
@@ -61,12 +69,20 @@ Square** Chessboard::operator[] (int i) {
 	return _board[i];
 }
 
+Square* Chessboard::operator[](const Pos& pos) const { 
+	return _board[pos.getRow()][pos.getCol()]; 
+}
+
 void Chessboard::populateStandard() {
 	try {
-		Square* square = _board[0][3];
-		square->_piece = make_unique<King>(King(King::Color::BLACK, Pos(0, 3)));
-		square = _board[7][3];
-		square->_piece = make_unique<King>(King(King::Color::WHITE, Pos(7, 3)));
+		Square* currentSquare = _board[0][3];
+		currentSquare->_piece = make_unique<King>(King(King::Color::BLACK, currentSquare->_pos));
+		currentSquare = _board[7][3];
+		currentSquare->_piece = make_unique<King>(King(King::Color::WHITE, currentSquare->_pos));
+		currentSquare = _board[0][4];
+		currentSquare->_piece = make_unique<Queen>(Queen(Queen::Color::BLACK, currentSquare->_pos));
+		currentSquare = _board[7][4];
+		currentSquare->_piece = make_unique<Queen>(Queen(Queen::Color::WHITE, currentSquare->_pos));
 	}
 
 	catch (const TooManyKingsException) {
@@ -75,4 +91,45 @@ void Chessboard::populateStandard() {
 	}
 
 	// Continuer l'initialisation des autres pieces.
+}
+
+bool Chessboard::isPosInAggroMoves(const piecetype::Pos& pos, const piecetype::Piece::Color& color) const {
+	if (color == Piece::Color::WHITE) {
+		set<Pos>::iterator it = std::find(_validBlackAggroMoves.begin(), _validBlackAggroMoves.end(), pos);
+		return !(it == _validBlackAggroMoves.end());
+	}
+	else if (color == Piece::Color::BLACK) {
+		set<Pos>::iterator it = std::find(_validWhiteAggroMoves.begin(), _validWhiteAggroMoves.end(), pos);
+		return !(it == _validWhiteAggroMoves.end());
+	}
+}
+
+void Chessboard::insertAggroMove(const Pos& pos, const Piece::Color& color) {
+	if (color == Piece::Color::WHITE) {
+		_validWhiteAggroMoves.insert(pos);
+	}
+
+	else if (color == Piece::Color::BLACK) {
+		_validBlackAggroMoves.insert(pos);
+	}
+}
+
+void Chessboard::updateAllValidMoves() {
+	Square* currentSquare;
+	vector<King*> kings;
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		for (int j = 0; j < BOARD_SIZE; j++) {
+			currentSquare = _board[i][j];
+			if (dynamic_cast<King*>(currentSquare->_piece.get())) {
+				King* king = dynamic_cast<King*>(currentSquare->_piece.get());
+				king->updateAggroMoves(*this);
+				kings.push_back(king);
+			}
+			else
+				currentSquare->_piece->updateValidMoves(*this);
+		}
+	}
+
+	kings[0]->updateValidMoves(*this);
+	kings[1]->updateValidMoves(*this);
 }

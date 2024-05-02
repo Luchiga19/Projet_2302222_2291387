@@ -3,9 +3,10 @@
 #include <QWidget>
 #include <memory>
 #include "Piece.h"
-#include "QLabel"
+#include <QLabel>
 #include <span>
 #include <stdexcept>
+#include <set>
 
 
 namespace interface {
@@ -20,13 +21,14 @@ namespace interface {
 
 		Square(QWidget* parent, piecetype::Pos pos);
 		void paintEvent(QPaintEvent* event) override;
-		void updateSquare();
+
+		bool isEmpty() const;
+		bool isSameColorPiece(const piecetype::Piece& other) const;
 
 	private:
 		piecetype::Pos _pos;
 		std::unique_ptr<piecetype::Piece> _piece;
 		QColor _color;
-		QLabel* _label;
 	};
 
 
@@ -36,10 +38,18 @@ namespace interface {
 
 		Chessboard(QWidget* parent);
 
-		Square** operator[] (int i);
+		Square** operator[](int i);
+		Square* operator[](const piecetype::Pos& pos) const;
 		void populateStandard();
 
+		bool isPosInAggroMoves(const piecetype::Pos& pos, const piecetype::Piece::Color& color) const;
+
+		void insertAggroMove(const piecetype::Pos& pos, const piecetype::Piece::Color& color);
+		void updateAllValidMoves();
+
 	private:
+		std::set<piecetype::Pos> _validWhiteAggroMoves;
+		std::set<piecetype::Pos> _validBlackAggroMoves;
 		Square* _board[BOARD_SIZE][BOARD_SIZE];
 	};
 }

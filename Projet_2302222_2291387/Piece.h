@@ -3,6 +3,11 @@
 #include <stdexcept>
 #include <QPixmap>
 
+
+namespace interface {
+	class Chessboard;
+};
+
 namespace piecetype {
 
 	class Pos {
@@ -10,7 +15,16 @@ namespace piecetype {
 		Pos(int row, int col);
 		Pos(const Pos& other);
 
-		Pos operator+(Pos other);
+		Pos operator+(const Pos& other) const;
+		void operator+=(const Pos& other);
+		bool operator==(const Pos& other) const;
+		bool operator!=(const Pos& other) const;
+		bool operator<(const Pos& other) const;
+		Pos& operator=(const Pos& other);
+		bool isValid() const;
+
+		int getRow() const { return _row; }
+		int getCol() const { return _col; }
 
 	private:
 		int _row;
@@ -27,16 +41,17 @@ namespace piecetype {
 
 		Piece(Color color, Pos pos);
 
+		virtual ~Piece() = default;
+
+		virtual void updateValidMoves(interface::Chessboard& board) = 0;
 		void move(Pos newPos);
 
-		virtual ~Piece() = 0;
-
-		virtual std::string getName() const = 0;
 		Pos getPos() const { return _pos; };
 		QPixmap getImage() const { return _image; }
+		Color getColor() const { return _color;  }
 
 	protected:
-		// array validMoves[]; add to ensure new move pos is in the array
+		std::vector<Pos> _validMoves;
 		Pos _pos;
 		QPixmap _image;
 
@@ -49,12 +64,21 @@ namespace piecetype {
 	public:
 		King(Color color, Pos pos);
 
-		std::string getName() const override;
+		void updateAggroMoves(interface::Chessboard& board);
+		void updateValidMoves(interface::Chessboard& board) override;
 
 	private:
 		static inline int _kingCount = 0;
 	};
 	
+
+	class Queen : public Piece {
+	public:
+		Queen(Color color, Pos pos);
+
+		void updateValidMoves(interface::Chessboard& board) override;
+	};
+
 
 	class TooManyKingsException : public std::logic_error {
 	public:
