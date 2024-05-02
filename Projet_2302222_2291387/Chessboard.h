@@ -27,6 +27,7 @@ namespace interface {
 
 		void movePiece(Square* square);
 
+		bool isKing() const;
 		bool isEmpty() const;
 		bool isSameColorPiece(const piecetype::Piece& other) const;
 
@@ -81,10 +82,11 @@ namespace interface {
 		void populateStandard();
 
 		bool isPosInAggroMoves(const piecetype::Pos& pos, const piecetype::Piece::Color& color) const;
+		bool isCheck(piecetype::King* king);
 
 		void insertAggroMove(const piecetype::Pos& pos, const piecetype::Piece::Color& color);
 		void resetAggroMoves();
-		void updateAllValidMoves();
+		void updateTurnMoves();
 
 		void setHighlightValidMoves(bool set);
 
@@ -94,6 +96,10 @@ namespace interface {
 	private:
 		piecetype::Piece::Color _currentPlayer;
 		Square* _sourceSquare = nullptr;
+
+		//std::vector<std::unique_ptr<piecetype::Piece>> whitePieces;
+		//std::vector<std::unique_ptr<piecetype::Piece>> blackPieces;
+
 		std::set<piecetype::Pos> _validWhiteAggroMoves;
 		std::set<piecetype::Pos> _validBlackAggroMoves;
 		Square* _board[BOARD_SIZE][BOARD_SIZE];

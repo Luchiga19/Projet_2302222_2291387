@@ -46,6 +46,10 @@ void Square::movePiece(Square* square) {
 	update();
 }
 
+bool Square::isKing() const {
+	return dynamic_cast<King*>(_piece.get());
+}
+
 bool Square::isEmpty() const {
 	return _piece == nullptr;
 }
@@ -140,6 +144,10 @@ void Chessboard::populateStandard() {
 	// Continuer l'initialisation des autres pieces.
 }
 
+// IMPROVE THIS TO A ONE LINER !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+// OR GET RID OF IT ALTOGETHER EVEN BETTER
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 bool Chessboard::isPosInAggroMoves(const piecetype::Pos& pos, const piecetype::Piece::Color& color) const {
 	if (color == Piece::Color::WHITE) {
 		set<Pos>::iterator it = std::find(_validBlackAggroMoves.begin(), _validBlackAggroMoves.end(), pos);
@@ -149,6 +157,14 @@ bool Chessboard::isPosInAggroMoves(const piecetype::Pos& pos, const piecetype::P
 		set<Pos>::iterator it = std::find(_validWhiteAggroMoves.begin(), _validWhiteAggroMoves.end(), pos);
 		return !(it == _validWhiteAggroMoves.end());
 	}
+}
+
+bool Chessboard::isCheck(King* king) {
+	if (king->getColor() == Piece::Color::WHITE)
+		return _validBlackAggroMoves.end() == std::find(_validBlackAggroMoves.begin(), _validBlackAggroMoves.end(), king->getPos());
+
+	else if (king->getColor() == Piece::Color::BLACK)
+		return _validWhiteAggroMoves.end() == std::find(_validWhiteAggroMoves.begin(), _validWhiteAggroMoves.end(), king->getPos());
 }
 
 void Chessboard::insertAggroMove(const Pos& pos, const Piece::Color& color) {
@@ -166,20 +182,25 @@ void Chessboard::resetAggroMoves() {
 	_validWhiteAggroMoves.clear();
 }
 
-void Chessboard::updateAllValidMoves() {
-	vector<King*> kings;
+void Chessboard::updateTurnMoves() {
+	King* king;
+
 	for (Square* currentSquare : *this) {
-		if (dynamic_cast<King*>(currentSquare->_piece.get())) {
-			King* king = dynamic_cast<King*>(currentSquare->_piece.get());
-			king->updateAggroMoves(*this);
-			kings.push_back(king);
-		}
-		else if (currentSquare->_piece != nullptr)
+		if (!currentSquare->isEmpty() && currentSquare->_piece->getColor() != _currentPlayer)
+			currentSquare->_piece->updateAggroMoves(*this);
+
+		else if (currentSquare->isKing() && currentSquare->_piece->getColor() == _currentPlayer)
+			 king = dynamic_cast<King*>(currentSquare->_piece.get());
+	}
+
+	for (Square* currentSquare : *this) {
+		if (!currentSquare->isEmpty() && currentSquare->_piece->getColor() == _currentPlayer)
 			currentSquare->_piece->updateValidMoves(*this);
 	}
 
-	kings[0]->updateValidMoves(*this);
-	kings[1]->updateValidMoves(*this);
+	if (isCheck(king)) {
+		
+	}
 }
 
 void Chessboard::setHighlightValidMoves(bool set) {
@@ -206,6 +227,6 @@ void Chessboard::onSquareClick(Square* square) {
 		_sourceSquare = nullptr;
 		_currentPlayer = (_currentPlayer == Piece::Color::WHITE) ? Piece::Color::BLACK : Piece::Color::WHITE;
 		resetAggroMoves();
-		updateAllValidMoves();
+		updateTurnMoves();
 	}
 }

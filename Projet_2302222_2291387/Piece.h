@@ -43,6 +43,7 @@ namespace piecetype {
 
 		virtual ~Piece() = default;
 
+		virtual void updateAggroMoves(interface::Chessboard& board) = 0;
 		virtual void updateValidMoves(interface::Chessboard& board) = 0;
 		void move(Pos newPos);
 
@@ -67,7 +68,7 @@ namespace piecetype {
 	public:
 		King(Color color, Pos pos);
 
-		void updateAggroMoves(interface::Chessboard& board);
+		void updateAggroMoves(interface::Chessboard& board) override;
 		void updateValidMoves(interface::Chessboard& board) override;
 
 	private:
@@ -79,6 +80,7 @@ namespace piecetype {
 	public:
 		Queen(Color color, Pos pos);
 
+		void updateAggroMoves(interface::Chessboard& board) override;
 		void updateValidMoves(interface::Chessboard& board) override;
 	};
 

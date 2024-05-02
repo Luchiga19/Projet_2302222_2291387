@@ -130,8 +130,7 @@ Queen::Queen(Color color, Pos pos) : Piece(color, pos) {
 	}
 }
 
-void Queen::updateValidMoves(Chessboard& board) {
-	_validMoves.clear();
+void Queen::updateAggroMoves(Chessboard& board) {
 	Pos initialPos = _pos;
 
 	for (int i = -1; i <= 1; i++) {
@@ -149,7 +148,35 @@ void Queen::updateValidMoves(Chessboard& board) {
 
 				board.insertAggroMove(_pos, getColor());
 
-				if (board[_pos]->isSameColorPiece(*this))
+				if (board[_pos]->isKing() && !board[_pos]->isSameColorPiece(*this)) {
+					_pos += addedPos;
+					board.insertAggroMove(_pos, getColor());
+					break;
+				}
+
+				else if (!board[_pos]->isEmpty())
+					break;
+			}
+			_pos = initialPos;
+		}
+	}
+}
+
+void Queen::updateValidMoves(Chessboard& board) {
+	_validMoves.clear();
+	Pos initialPos = _pos;
+
+	for (int i = -1; i <= 1; i++) {
+		for (int j = -1; j <= 1; j++) {
+
+			if (i == 0 && j == 0)
+				continue;
+
+			while (true) {
+				Pos addedPos(i, j);
+				_pos += addedPos;
+
+				if (!_pos.isValid() || board[_pos]->isSameColorPiece(*this))
 					break;
 
 				_validMoves.push_back(_pos);

@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
 	layout->addWidget(&chessboard);
 
 	window.setLayout(layout);
-	chessboard.updateAllValidMoves();
+	chessboard.updateTurnMoves();
 
 	window.show();
 	return app.exec();
