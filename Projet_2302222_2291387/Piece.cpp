@@ -54,7 +54,10 @@ Piece::Piece(Color color, Pos pos) :
 
 void Piece::move(Pos newPos) {
 	_pos = newPos;
-	// add emission of signal to adjuste the view
+}
+
+bool Piece::isInValidMoves(const Pos& pos) {
+	return _validMoves.end() != std::find(_validMoves.begin(), _validMoves.end(), pos);
 }
 
 

@@ -24,6 +24,8 @@ namespace interface {
 		Square(QWidget* parent, piecetype::Pos pos);
 		void paintEvent(QPaintEvent* event) override;
 
+		void movePiece(Square* square);
+
 		bool isEmpty() const;
 		bool isSameColorPiece(const piecetype::Piece& other) const;
 
@@ -45,6 +47,8 @@ namespace interface {
 
 	public:
 		static constexpr int BOARD_SIZE = 8;
+		static constexpr const char* HIGHLIGHT = "border: 4px solid gray;";
+		static constexpr const char* EMPTY = "";
 
 		class iterator {
 		public: 
@@ -55,10 +59,7 @@ namespace interface {
 			bool operator==(const iterator& it);
 			bool operator!=(const iterator& it);
 
-
-
 		private:
-			Square* _sourceSquare;
 			Square* (*_ptr)[BOARD_SIZE];
 			int _row, _col;
 		};
@@ -74,15 +75,23 @@ namespace interface {
 		Chessboard(QWidget* parent);
 
 		Square** operator[](int i);
-		Square* operator[](const piecetype::Pos& pos) const;
+		Square* operator[](const piecetype::Pos& pos);
 		void populateStandard();
 
 		bool isPosInAggroMoves(const piecetype::Pos& pos, const piecetype::Piece::Color& color) const;
 
 		void insertAggroMove(const piecetype::Pos& pos, const piecetype::Piece::Color& color);
+		void resetAggroMoves();
 		void updateAllValidMoves();
 
+		void setHighlightValidMoves(const char* highlight);
+
+	public slots:
+		void onSquareClick(Square* square);
+
 	private:
+		piecetype::Piece::Color _currentPlayer;
+		Square* _sourceSquare = nullptr;
 		std::set<piecetype::Pos> _validWhiteAggroMoves;
 		std::set<piecetype::Pos> _validBlackAggroMoves;
 		Square* _board[BOARD_SIZE][BOARD_SIZE];

@@ -1,5 +1,6 @@
 #include "Chessboard.h"
 #include <QObject>
+#include <memory>
 #include <QMouseEvent>
 #include <QWidget>
 #include <QGridLayout>
@@ -28,10 +29,17 @@ Square::Square(QWidget* parent, Pos pos) :
 void Square::paintEvent(QPaintEvent* event) {
 	QPainter painter(this);
 
-	painter.fillRect(rect(), _color); // Fill the entire widget area with red
+	painter.fillRect(rect(), _color);
 
 	if (_piece != nullptr)
 		painter.drawPixmap(rect(), _piece->getImage());
+}
+
+void Square::movePiece(Square* square) {
+	_piece->move(square->_pos);
+	square->_piece = std::move(_piece);
+	square->update();
+	update();
 }
 
 bool Square::isEmpty() const {
@@ -78,14 +86,15 @@ bool Chessboard::iterator::operator!=(const iterator& it) {
 }
 
 Chessboard::Chessboard(QWidget* parent) :
-	QWidget(parent)
+	QWidget(parent), _currentPlayer(Piece::Color::WHITE)
 {
 	QGridLayout* layout = new QGridLayout(this);
 	layout->setSpacing(0);
 
 	for (int row = 0; row < BOARD_SIZE; row++) {
 		for (int col = 0; col < BOARD_SIZE; col++) {
-			Square *square = new Square(this, Pos(row, col));
+			Square* square = new Square(this, Pos(row, col));
+			QObject::connect(square, &Square::squareClicked, this, &Chessboard::onSquareClick);
 			square->_color = ((row + col) % 2 == 0 ? Qt::white : QColor(255, 209, 181));
 			layout->addWidget(square, row, col);
 			_board[row][col] = square;
@@ -103,7 +112,7 @@ Square** Chessboard::operator[] (int i) {
 	return _board[i];
 }
 
-Square* Chessboard::operator[](const Pos& pos) const { 
+Square* Chessboard::operator[](const Pos& pos) { 
 	return _board[pos.getRow()][pos.getCol()]; 
 }
 
@@ -148,6 +157,11 @@ void Chessboard::insertAggroMove(const Pos& pos, const Piece::Color& color) {
 	}
 }
 
+void Chessboard::resetAggroMoves() {
+	_validBlackAggroMoves.clear();
+	_validWhiteAggroMoves.clear();
+}
+
 void Chessboard::updateAllValidMoves() {
 	vector<King*> kings;
 	for (Square* currentSquare : *this) {
@@ -162,4 +176,32 @@ void Chessboard::updateAllValidMoves() {
 
 	kings[0]->updateValidMoves(*this);
 	kings[1]->updateValidMoves(*this);
+}
+
+void Chessboard::setHighlightValidMoves(const char* highlight) {
+	for (const Pos& pos : _sourceSquare->_piece->getValidMoves()) {
+		(*this)[pos]->setStyleSheet("border: 4px solid gray;");
+	}
+	_sourceSquare->update();
+}
+
+void Chessboard::onSquareClick(Square* square) {
+	if (_sourceSquare == nullptr && !square->isEmpty() && square->_piece->getColor() == _currentPlayer) {
+		_sourceSquare = square;
+		setHighlightValidMoves(HIGHLIGHT);
+	}
+
+	else if (_sourceSquare == square) {
+		setHighlightValidMoves(EMPTY);
+		_sourceSquare = nullptr;
+	}
+
+	else if (_sourceSquare != nullptr && _sourceSquare->_piece->isInValidMoves(square->_pos)) {
+		setHighlightValidMoves(EMPTY);
+		_sourceSquare->movePiece(square);
+		_sourceSquare = nullptr;
+		_currentPlayer = (_currentPlayer == Piece::Color::WHITE) ? Piece::Color::BLACK : Piece::Color::WHITE;
+		resetAggroMoves();
+		updateAllValidMoves();
+	}
 }

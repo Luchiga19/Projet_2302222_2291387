@@ -46,6 +46,9 @@ namespace piecetype {
 		virtual void updateValidMoves(interface::Chessboard& board) = 0;
 		void move(Pos newPos);
 
+		bool isInValidMoves(const Pos& pos);
+
+		std::vector<Pos> getValidMoves() const { return _validMoves; }
 		Pos getPos() const { return _pos; };
 		QPixmap getImage() const { return _image; }
 		Color getColor() const { return _color;  }
