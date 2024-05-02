@@ -7,6 +7,7 @@
 #include "Piece.h"
 #include <QLabel>
 #include <span>
+#include <QPixmap>
 #include <stdexcept>
 #include <set>
 
@@ -36,6 +37,9 @@ namespace interface {
 		void mousePressEvent(QMouseEvent* event) override;
 
 	private:
+		bool _isContour = false;
+
+		QPixmap _contour;
 		piecetype::Pos _pos;
 		std::unique_ptr<piecetype::Piece> _piece;
 		QColor _color;
@@ -47,8 +51,6 @@ namespace interface {
 
 	public:
 		static constexpr int BOARD_SIZE = 8;
-		static constexpr const char* HIGHLIGHT = "border: 4px solid gray;";
-		static constexpr const char* EMPTY = "";
 
 		class iterator {
 		public: 
@@ -84,7 +86,7 @@ namespace interface {
 		void resetAggroMoves();
 		void updateAllValidMoves();
 
-		void setHighlightValidMoves(const char* highlight);
+		void setHighlightValidMoves(bool set);
 
 	public slots:
 		void onSquareClick(Square* square);
