@@ -39,9 +39,21 @@ void Square::paintEvent(QPaintEvent* event) {
 		painter.drawPixmap(rect(), _contour);
 }
 
-void Square::movePiece(Square* square) {
+void Square::tempMovePiece(Square* square) {
 	_piece->move(square->_pos);
 	square->_piece = std::move(_piece);
+}
+
+void Square::movePiece(Square* square, Chessboard& board) {
+	if (square->_piece != nullptr && board._currentPlayer == Piece::Color::WHITE)
+		board._blackPieces.erase(remove_if(board._blackPieces.begin(), board._blackPieces.end(),
+			[&](shared_ptr<Piece> piece) { return piece == square->_piece; }), board._blackPieces.end());
+
+	else if (square->_piece != nullptr && board._currentPlayer == Piece::Color::BLACK)
+		board._whitePieces.erase(remove_if(board._whitePieces.begin(), board._whitePieces.end(),
+			[&](shared_ptr<Piece> piece) { return piece == square->_piece; }), board._whitePieces.end());
+
+	tempMovePiece(square);
 	square->update();
 	update();
 }
@@ -63,6 +75,20 @@ bool Square::isSameColorPiece(const Piece& other) const {
 void Square::mousePressEvent(QMouseEvent* event) {
 	if (event->button() == Qt::LeftButton)
 		emit squareClicked(this);
+}
+
+
+TempCheckMove::TempCheckMove(Square* initialSquare, Square* destinationSquare) :
+	_initialSquare(initialSquare), 
+	_destinationSquare(destinationSquare), 
+	_pieceHolder(destinationSquare->_piece)
+{
+	_initialSquare->tempMovePiece(_destinationSquare);
+}
+
+TempCheckMove::~TempCheckMove() {
+	_destinationSquare->tempMovePiece(_initialSquare);
+	_destinationSquare->_piece = _pieceHolder;
 }
 
 
@@ -125,15 +151,18 @@ Square* Chessboard::operator[](const Pos& pos) {
 }
 
 void Chessboard::populateStandard() {
+	Square* currentSquare;
+
 	try {
-		Square* currentSquare = _board[0][3];
-		currentSquare->_piece = make_unique<King>(King(King::Color::BLACK, currentSquare->_pos));
+		currentSquare = _board[0][3];
+		_blackKing = make_shared<King>(King(King::Color::BLACK, currentSquare->_pos));
+		currentSquare->_piece = _blackKing;
+		_blackPieces.push_back(currentSquare->_piece);
+
 		currentSquare = _board[7][3];
-		currentSquare->_piece = make_unique<King>(King(King::Color::WHITE, currentSquare->_pos));
-		currentSquare = _board[0][4];
-		currentSquare->_piece = make_unique<Queen>(Queen(Queen::Color::BLACK, currentSquare->_pos));
-		currentSquare = _board[7][4];
-		currentSquare->_piece = make_unique<Queen>(Queen(Queen::Color::WHITE, currentSquare->_pos));
+		_whiteKing = make_shared<King>(King(King::Color::WHITE, currentSquare->_pos));
+		currentSquare->_piece = _whiteKing;
+		_whitePieces.push_back(currentSquare->_piece);
 	}
 
 	catch (const TooManyKingsException) {
@@ -141,30 +170,21 @@ void Chessboard::populateStandard() {
 		QMessageBox::warning(nullptr, "Warning", "Attempting to initialize more kings than permitted");
 	}
 
-	// Continuer l'initialisation des autres pieces.
+	currentSquare = _board[0][4];
+	currentSquare->_piece = make_shared<Queen>(Queen(Queen::Color::BLACK, currentSquare->_pos));
+	_blackPieces.push_back(currentSquare->_piece);
+
+	currentSquare = _board[7][4];
+	currentSquare->_piece = make_shared<Queen>(Queen(Queen::Color::WHITE, currentSquare->_pos));
+	_whitePieces.push_back(currentSquare->_piece);
 }
 
-// IMPROVE THIS TO A ONE LINER !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+bool Chessboard::isCheck(const King& king) const {
+	if (king.getColor() == Piece::Color::WHITE)
+		return _validBlackAggroMoves.end() != std::find(_validBlackAggroMoves.begin(), _validBlackAggroMoves.end(), king.getPos());
 
-// OR GET RID OF IT ALTOGETHER EVEN BETTER
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-bool Chessboard::isPosInAggroMoves(const piecetype::Pos& pos, const piecetype::Piece::Color& color) const {
-	if (color == Piece::Color::WHITE) {
-		set<Pos>::iterator it = std::find(_validBlackAggroMoves.begin(), _validBlackAggroMoves.end(), pos);
-		return !(it == _validBlackAggroMoves.end());
-	}
-	else if (color == Piece::Color::BLACK) {
-		set<Pos>::iterator it = std::find(_validWhiteAggroMoves.begin(), _validWhiteAggroMoves.end(), pos);
-		return !(it == _validWhiteAggroMoves.end());
-	}
-}
-
-bool Chessboard::isCheck(King* king) {
-	if (king->getColor() == Piece::Color::WHITE)
-		return _validBlackAggroMoves.end() == std::find(_validBlackAggroMoves.begin(), _validBlackAggroMoves.end(), king->getPos());
-
-	else if (king->getColor() == Piece::Color::BLACK)
-		return _validWhiteAggroMoves.end() == std::find(_validWhiteAggroMoves.begin(), _validWhiteAggroMoves.end(), king->getPos());
+	else if (king.getColor() == Piece::Color::BLACK)
+		return _validWhiteAggroMoves.end() != std::find(_validWhiteAggroMoves.begin(), _validWhiteAggroMoves.end(), king.getPos());
 }
 
 void Chessboard::insertAggroMove(const Pos& pos, const Piece::Color& color) {
@@ -183,23 +203,29 @@ void Chessboard::resetAggroMoves() {
 }
 
 void Chessboard::updateTurnMoves() {
-	King* king;
+	shared_ptr<King> teamKing = (_currentPlayer == Piece::Color::WHITE) ? _whiteKing : _blackKing;
 
-	for (Square* currentSquare : *this) {
-		if (!currentSquare->isEmpty() && currentSquare->_piece->getColor() != _currentPlayer)
-			currentSquare->_piece->updateAggroMoves(*this);
+	vector<shared_ptr<Piece>>& teamPieces = (_currentPlayer == Piece::Color::WHITE) ? _whitePieces : _blackPieces;
+	vector<shared_ptr<Piece>>& enemyPieces = (_currentPlayer == Piece::Color::WHITE) ? _blackPieces : _whitePieces;
 
-		else if (currentSquare->isKing() && currentSquare->_piece->getColor() == _currentPlayer)
-			 king = dynamic_cast<King*>(currentSquare->_piece.get());
-	}
+	for (shared_ptr<Piece> piece : enemyPieces)
+		piece->updateAggroMoves(*this);
 
-	for (Square* currentSquare : *this) {
-		if (!currentSquare->isEmpty() && currentSquare->_piece->getColor() == _currentPlayer)
-			currentSquare->_piece->updateValidMoves(*this);
-	}
-
-	if (isCheck(king)) {
-		
+	for (shared_ptr<Piece> piece : teamPieces) {
+		piece->updateValidMoves(*this);
+		vector<Pos> invalidMoves;
+		for (Pos& pos : piece->getValidMoves()) {
+			
+			TempCheckMove tempMove((*this)[piece->getPos()], (*this)[pos]);
+			resetAggroMoves();
+			for (shared_ptr<Piece> piece : enemyPieces)
+				if (piece->getPos() != pos)
+					piece->updateAggroMoves(*this);
+			if (isCheck(*teamKing))
+				invalidMoves.push_back(pos);
+		}
+		if (!invalidMoves.empty())
+			piece->removeValidMove(invalidMoves);
 	}
 }
 
@@ -216,6 +242,12 @@ void Chessboard::onSquareClick(Square* square) {
 		setHighlightValidMoves(true);
 	}
 
+	else if (_sourceSquare != nullptr && !square->isEmpty() && square->_piece->getColor() == _currentPlayer) {
+		setHighlightValidMoves(false);
+		_sourceSquare = square;
+		setHighlightValidMoves(true);
+	}
+
 	else if (_sourceSquare == square) {
 		setHighlightValidMoves(false);
 		_sourceSquare = nullptr;
@@ -223,7 +255,7 @@ void Chessboard::onSquareClick(Square* square) {
 
 	else if (_sourceSquare != nullptr && _sourceSquare->_piece->isInValidMoves(square->_pos)) {
 		setHighlightValidMoves(false);
-		_sourceSquare->movePiece(square);
+		_sourceSquare->movePiece(square, *this);
 		_sourceSquare = nullptr;
 		_currentPlayer = (_currentPlayer == Piece::Color::WHITE) ? Piece::Color::BLACK : Piece::Color::WHITE;
 		resetAggroMoves();

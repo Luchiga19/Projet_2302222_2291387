@@ -19,13 +19,15 @@ namespace interface {
 
 	public:
 		friend class Chessboard;
+		friend class TempCheckMove;
 
 		static constexpr int SQUARE_SIZE = 80;
 
 		Square(QWidget* parent, piecetype::Pos pos);
 		void paintEvent(QPaintEvent* event) override;
 
-		void movePiece(Square* square);
+		void tempMovePiece(Square* square);
+		void movePiece(Square* square, Chessboard& board);
 
 		bool isKing() const;
 		bool isEmpty() const;
@@ -42,8 +44,20 @@ namespace interface {
 
 		QPixmap _contour;
 		piecetype::Pos _pos;
-		std::unique_ptr<piecetype::Piece> _piece;
+		std::shared_ptr<piecetype::Piece> _piece;
 		QColor _color;
+	};
+
+
+	class TempCheckMove {
+	public:
+		TempCheckMove(Square* initialSquare, Square* destinationSquare);
+		~TempCheckMove();
+
+	private:
+		Square* _initialSquare;
+		Square* _destinationSquare;
+		std::shared_ptr<piecetype::Piece> _pieceHolder;
 	};
 
 
@@ -51,6 +65,7 @@ namespace interface {
 		Q_OBJECT
 
 	public:
+		friend class Square;
 		static constexpr int BOARD_SIZE = 8;
 
 		class iterator {
@@ -81,8 +96,7 @@ namespace interface {
 		Square* operator[](const piecetype::Pos& pos);
 		void populateStandard();
 
-		bool isPosInAggroMoves(const piecetype::Pos& pos, const piecetype::Piece::Color& color) const;
-		bool isCheck(piecetype::King* king);
+		bool isCheck(const piecetype::King& king) const;
 
 		void insertAggroMove(const piecetype::Pos& pos, const piecetype::Piece::Color& color);
 		void resetAggroMoves();
@@ -97,8 +111,11 @@ namespace interface {
 		piecetype::Piece::Color _currentPlayer;
 		Square* _sourceSquare = nullptr;
 
-		//std::vector<std::unique_ptr<piecetype::Piece>> whitePieces;
-		//std::vector<std::unique_ptr<piecetype::Piece>> blackPieces;
+		std::shared_ptr<piecetype::King> _whiteKing;
+		std::shared_ptr<piecetype::King> _blackKing;
+
+		std::vector<std::shared_ptr<piecetype::Piece>> _whitePieces;
+		std::vector<std::shared_ptr<piecetype::Piece>> _blackPieces;
 
 		std::set<piecetype::Pos> _validWhiteAggroMoves;
 		std::set<piecetype::Pos> _validBlackAggroMoves;

@@ -56,6 +56,11 @@ void Piece::move(Pos newPos) {
 	_pos = newPos;
 }
 
+void Piece::removeValidMove(vector<Pos>& invalidMoves) {
+	for (Pos& pos : invalidMoves)
+		_validMoves.erase(remove_if(_validMoves.begin(), _validMoves.end(), [&](const Pos& other) { return pos == other; }), _validMoves.end());
+}
+
 bool Piece::isInValidMoves(const Pos& pos) {
 	return _validMoves.end() != std::find(_validMoves.begin(), _validMoves.end(), pos);
 }
@@ -111,7 +116,7 @@ void King::updateValidMoves(interface::Chessboard& board) {
 			Pos addedPos(i, j);
 			_pos += addedPos;
 
-			if (_pos.isValid() && !board.isPosInAggroMoves(_pos, getColor()) && !board[_pos]->isSameColorPiece(*this))
+			if (_pos.isValid() && !board.isCheck(*this) && !board[_pos]->isSameColorPiece(*this))
 				_validMoves.push_back(_pos);
 
 			_pos = initialPos;

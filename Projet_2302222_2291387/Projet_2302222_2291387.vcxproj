@@ -41,7 +41,7 @@
     <QtInstall>6.7.0_msvc2019_64</QtInstall>
     <QtModules>gui;widgets</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
-    <QtPlugin>false</QtPlugin>
+    <QtPlugin>true</QtPlugin>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
     <QtInstall>6.7.0_msvc2019_64</QtInstall>
