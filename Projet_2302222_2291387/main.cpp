@@ -1,20 +1,20 @@
 #include <QApplication>
-#include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <QWidget>
+#include "MainMenu.h"
 #include "Chessboard.h"
 
 int main(int argc, char *argv[]) {
 	QApplication app(argc, argv);
 
-	QWidget chessboardWindow;
-	chessboardWindow.setWindowTitle("Chess");
+	QWidget mainWindow;
 
-	interface::Chessboard chessboard(&chessboardWindow);
+	QVBoxLayout* mainLayout = new QVBoxLayout(&mainWindow);
 
-	QHBoxLayout* layout = new QHBoxLayout(&chessboardWindow);
-	layout->addWidget(&chessboard);
-	chessboardWindow.setLayout(layout);
+	MainMenu menu(&mainWindow);
+	mainLayout->addWidget(&menu);
 
-	chessboardWindow.show();
+	mainWindow.show();
+
 	return app.exec();
 }

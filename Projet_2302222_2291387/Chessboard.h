@@ -94,15 +94,25 @@ namespace interface {
 
 		Square** operator[](int i);
 		Square* operator[](const piecetype::Pos& pos);
+
+		template<typename T>
+		void addPiece(Square* square, piecetype::Piece::Color color);
+
+		void clearBoard();
 		void populateStandard();
+		void populateEndgame();
 
 		bool isCheck(const piecetype::King& king) const;
+		void checkIfGameEnded(std::vector<std::shared_ptr<piecetype::Piece>>& teamPieces, std::shared_ptr<piecetype::King> teamKing);
 
 		void insertAggroMove(const piecetype::Pos& pos, const piecetype::Piece::Color& color);
 		void resetAggroMoves();
 		void updateTurnMoves();
 
 		void setHighlightValidMoves(bool set);
+
+	signals:
+		void gameEnded();
 
 	public slots:
 		void onSquareClick(Square* square);

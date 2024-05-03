@@ -138,8 +138,6 @@ Chessboard::Chessboard(QWidget* parent) :
 	}
 
 	layout->setSizeConstraint(QLayout::SetFixedSize);
-
-	populateStandard();
 	
 	setLayout(layout);
 };
@@ -152,19 +150,50 @@ Square* Chessboard::operator[](const Pos& pos) {
 	return _board[pos.getRow()][pos.getCol()]; 
 }
 
+template<typename T>
+void Chessboard::addPiece(Square* square, Piece::Color color) {
+	shared_ptr<Piece> piece = make_shared<T>(T(color, square->_pos));
+	square->_piece = piece;
+	
+	if (color == Piece::Color::WHITE) {
+		_whitePieces.push_back(piece);
+		if (square->isKing())
+			_whiteKing = dynamic_pointer_cast<King>(piece);
+	}
+
+	else if (color == Piece::Color::BLACK) {
+		_blackPieces.push_back(piece);
+		if (square->isKing())
+			_blackKing = dynamic_pointer_cast<King>(piece);
+	}
+}
+
+void Chessboard::clearBoard() {
+	for (Square* square : *this)
+		square->_piece.reset();
+
+	_currentPlayer = Piece::Color::WHITE;
+	_sourceSquare = nullptr;
+
+	_whiteKing.reset();
+	_blackKing.reset();
+
+	_whitePieces.clear();
+	_blackPieces.clear();
+
+	_validBlackAggroMoves.clear();
+	_validWhiteAggroMoves.clear();
+
+	King::resetKingCounts();
+}
+
 void Chessboard::populateStandard() {
-	Square* currentSquare;
+	clearBoard();
 
 	try {
-		currentSquare = _board[0][3];
-		_blackKing = make_shared<King>(King(King::Color::BLACK, currentSquare->_pos));
-		currentSquare->_piece = _blackKing;
-		_blackPieces.push_back(currentSquare->_piece);
+		addPiece<King>(_board[0][3], Piece::Color::BLACK);
 
-		currentSquare = _board[7][3];
-		_whiteKing = make_shared<King>(King(King::Color::WHITE, currentSquare->_pos));
-		currentSquare->_piece = _whiteKing;
-		_whitePieces.push_back(currentSquare->_piece);
+		addPiece<King>(_board[7][3], Piece::Color::WHITE);
 	}
 
 	catch (const TooManyKingsException&) {
@@ -173,77 +202,65 @@ void Chessboard::populateStandard() {
 	}
 
 	// Queens
-	currentSquare = _board[0][4];
-	currentSquare->_piece = make_shared<Queen>(Queen(Queen::Color::BLACK, currentSquare->_pos));
-	_blackPieces.push_back(currentSquare->_piece);
+	addPiece<Queen>(_board[0][4], Piece::Color::BLACK);
 
-	currentSquare = _board[7][4];
-	currentSquare->_piece = make_shared<Queen>(Queen(Queen::Color::WHITE, currentSquare->_pos));
-	_whitePieces.push_back(currentSquare->_piece);
+	addPiece<Queen>(_board[7][4], Piece::Color::WHITE);
 
 	// Bishops
-	currentSquare = _board[0][2];
-	currentSquare->_piece = make_shared<Bishop>(Bishop(Bishop::Color::BLACK, currentSquare->_pos));
-	_blackPieces.push_back(currentSquare->_piece);
+	addPiece<Bishop>(_board[0][2], Piece::Color::BLACK);
 
-	currentSquare = _board[0][5];
-	currentSquare->_piece = make_shared<Bishop>(Bishop(Bishop::Color::BLACK, currentSquare->_pos));
-	_blackPieces.push_back(currentSquare->_piece);
+	addPiece<Bishop>(_board[0][5], Piece::Color::BLACK);
 
-	currentSquare = _board[7][2];
-	currentSquare->_piece = make_shared<Bishop>(Bishop(Bishop::Color::WHITE, currentSquare->_pos));
-	_whitePieces.push_back(currentSquare->_piece);
+	addPiece<Bishop>(_board[7][2], Piece::Color::WHITE);
 
-	currentSquare = _board[7][5];
-	currentSquare->_piece = make_shared<Bishop>(Bishop(Bishop::Color::WHITE, currentSquare->_pos));
-	_whitePieces.push_back(currentSquare->_piece);
+	addPiece<Bishop>(_board[7][5], Piece::Color::WHITE);
 
 	// Knights
-	currentSquare = _board[0][1];
-	currentSquare->_piece = make_shared<Knight>(Knight(Knight::Color::BLACK, currentSquare->_pos));
-	_blackPieces.push_back(currentSquare->_piece);
+	addPiece<Knight>(_board[0][1], Piece::Color::BLACK);
 
-	currentSquare = _board[0][6];
-	currentSquare->_piece = make_shared<Knight>(Knight(Knight::Color::BLACK, currentSquare->_pos));
-	_blackPieces.push_back(currentSquare->_piece);
+	addPiece<Knight>(_board[0][6], Piece::Color::BLACK);
 
-	currentSquare = _board[7][1];
-	currentSquare->_piece = make_shared<Knight>(Knight(Knight::Color::WHITE, currentSquare->_pos));
-	_whitePieces.push_back(currentSquare->_piece);
+	addPiece<Knight>(_board[7][1], Piece::Color::WHITE);
 
-	currentSquare = _board[7][6];
-	currentSquare->_piece = make_shared<Knight>(Knight(Knight::Color::WHITE, currentSquare->_pos));
-	_whitePieces.push_back(currentSquare->_piece);
+	addPiece<Knight>(_board[7][6], Piece::Color::WHITE);
 
 	// Rooks
-	currentSquare = _board[0][0];
-	currentSquare->_piece = make_shared<Rook>(Rook(Rook::Color::BLACK, currentSquare->_pos));
-	_blackPieces.push_back(currentSquare->_piece);
+	addPiece<Rook>(_board[0][0], Piece::Color::BLACK);
 
-	currentSquare = _board[0][7];
-	currentSquare->_piece = make_shared<Rook>(Rook(Rook::Color::BLACK, currentSquare->_pos));
-	_blackPieces.push_back(currentSquare->_piece);
+	addPiece<Rook>(_board[0][7], Piece::Color::BLACK);
 
-	currentSquare = _board[7][0];
-	currentSquare->_piece = make_shared<Rook>(Rook(Rook::Color::WHITE, currentSquare->_pos));
-	_whitePieces.push_back(currentSquare->_piece);
+	addPiece<Rook>(_board[7][0], Piece::Color::WHITE);
 
-	currentSquare = _board[7][7];
-	currentSquare->_piece = make_shared<Rook>(Rook(Rook::Color::WHITE, currentSquare->_pos));
-	_whitePieces.push_back(currentSquare->_piece);
+	addPiece<Rook>(_board[7][7], Piece::Color::WHITE);
 
 	// Pawn
 	for (int i = 0; i < BOARD_SIZE; i++) {
-		currentSquare = _board[1][i];
-		currentSquare->_piece = make_shared<Pawn>(Pawn(Pawn::Color::BLACK, currentSquare->_pos));
-		_blackPieces.push_back(currentSquare->_piece);
+		addPiece<Pawn>(_board[1][i], Piece::Color::BLACK);
 	}
 
 	for (int i = 0; i < BOARD_SIZE; i++) {
-		currentSquare = _board[6][i];
-		currentSquare->_piece = make_shared<Pawn>(Pawn(Pawn::Color::WHITE, currentSquare->_pos));
-		_whitePieces.push_back(currentSquare->_piece);
+		addPiece<Pawn>(_board[6][i], Piece::Color::WHITE);
 	}
+
+	updateTurnMoves();
+}
+
+void Chessboard::populateEndgame() {
+	clearBoard();
+
+	addPiece<King>(_board[4][2], Piece::Color::BLACK);
+
+	addPiece<King>(_board[5][6], Piece::Color::WHITE);
+
+	addPiece<Rook>(_board[4][1], Piece::Color::BLACK);
+
+	addPiece<Rook>(_board[0][4], Piece::Color::WHITE);
+
+	addPiece<Bishop>(_board[1][4], Piece::Color::BLACK);
+
+	addPiece<Bishop>(_board[1][1], Piece::Color::BLACK);
+
+	addPiece<Bishop>(_board[4][5], Piece::Color::WHITE);
 
 	updateTurnMoves();
 }
@@ -254,6 +271,24 @@ bool Chessboard::isCheck(const King& king) const {
 
 	else if (king.getColor() == Piece::Color::BLACK)
 		return _validWhiteAggroMoves.end() != std::find(_validWhiteAggroMoves.begin(), _validWhiteAggroMoves.end(), king.getPos());
+}
+
+void Chessboard::checkIfGameEnded(vector<shared_ptr<Piece>>& teamPieces, shared_ptr<King> teamKing) {
+	for (shared_ptr<Piece> piece : teamPieces) {
+		if (!piece->getValidMoves().empty())
+			return;
+	}
+
+	if (isCheck(*teamKing) && _currentPlayer == Piece::Color::WHITE)
+		QMessageBox::information(this, "Checkmate!", "Black pieces win the game!");
+
+	else if (isCheck(*teamKing) && _currentPlayer == Piece::Color::BLACK)
+		QMessageBox::information(this, "Checkmate!", "White pieces win the game!");
+
+	else
+		QMessageBox::information(this, "Stalemate!", "It's a draw!");
+
+	emit gameEnded();
 }
 
 void Chessboard::insertAggroMove(const Pos& pos, const Piece::Color& color) {
@@ -296,6 +331,8 @@ void Chessboard::updateTurnMoves() {
 		if (!invalidMoves.empty())
 			piece->removeValidMove(invalidMoves);
 	}
+
+	checkIfGameEnded(teamPieces, teamKing);
 }
 
 void Chessboard::setHighlightValidMoves(bool set) {
