@@ -99,10 +99,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <QtMoc Include="Chessboard.h" />
+    <QtMoc Include="MainMenu.h" />
     <ClInclude Include="Piece.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Chessboard.cpp" />
+    <ClCompile Include="MainMenu.cpp" />
     <ClCompile Include="Piece.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>

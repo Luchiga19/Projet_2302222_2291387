@@ -125,6 +125,8 @@ Chessboard::Chessboard(QWidget* parent) :
 	QGridLayout* layout = new QGridLayout(this);
 	layout->setSpacing(0);
 
+	King::resetKingCounts();
+
 	for (int row = 0; row < BOARD_SIZE; row++) {
 		for (int col = 0; col < BOARD_SIZE; col++) {
 			Square* square = new Square(this, Pos(row, col));
@@ -165,11 +167,12 @@ void Chessboard::populateStandard() {
 		_whitePieces.push_back(currentSquare->_piece);
 	}
 
-	catch (const TooManyKingsException) {
+	catch (const TooManyKingsException&) {
 		cout << "Attempting to initialize more kings than permitted" << endl;
 		QMessageBox::warning(nullptr, "Warning", "Attempting to initialize more kings than permitted");
 	}
 
+	// Queens
 	currentSquare = _board[0][4];
 	currentSquare->_piece = make_shared<Queen>(Queen(Queen::Color::BLACK, currentSquare->_pos));
 	_blackPieces.push_back(currentSquare->_piece);
@@ -177,6 +180,70 @@ void Chessboard::populateStandard() {
 	currentSquare = _board[7][4];
 	currentSquare->_piece = make_shared<Queen>(Queen(Queen::Color::WHITE, currentSquare->_pos));
 	_whitePieces.push_back(currentSquare->_piece);
+
+	// Bishops
+	currentSquare = _board[0][2];
+	currentSquare->_piece = make_shared<Bishop>(Bishop(Bishop::Color::BLACK, currentSquare->_pos));
+	_blackPieces.push_back(currentSquare->_piece);
+
+	currentSquare = _board[0][5];
+	currentSquare->_piece = make_shared<Bishop>(Bishop(Bishop::Color::BLACK, currentSquare->_pos));
+	_blackPieces.push_back(currentSquare->_piece);
+
+	currentSquare = _board[7][2];
+	currentSquare->_piece = make_shared<Bishop>(Bishop(Bishop::Color::WHITE, currentSquare->_pos));
+	_whitePieces.push_back(currentSquare->_piece);
+
+	currentSquare = _board[7][5];
+	currentSquare->_piece = make_shared<Bishop>(Bishop(Bishop::Color::WHITE, currentSquare->_pos));
+	_whitePieces.push_back(currentSquare->_piece);
+
+	// Knights
+	currentSquare = _board[0][1];
+	currentSquare->_piece = make_shared<Knight>(Knight(Knight::Color::BLACK, currentSquare->_pos));
+	_blackPieces.push_back(currentSquare->_piece);
+
+	currentSquare = _board[0][6];
+	currentSquare->_piece = make_shared<Knight>(Knight(Knight::Color::BLACK, currentSquare->_pos));
+	_blackPieces.push_back(currentSquare->_piece);
+
+	currentSquare = _board[7][1];
+	currentSquare->_piece = make_shared<Knight>(Knight(Knight::Color::WHITE, currentSquare->_pos));
+	_whitePieces.push_back(currentSquare->_piece);
+
+	currentSquare = _board[7][6];
+	currentSquare->_piece = make_shared<Knight>(Knight(Knight::Color::WHITE, currentSquare->_pos));
+	_whitePieces.push_back(currentSquare->_piece);
+
+	// Rooks
+	currentSquare = _board[0][0];
+	currentSquare->_piece = make_shared<Rook>(Rook(Rook::Color::BLACK, currentSquare->_pos));
+	_blackPieces.push_back(currentSquare->_piece);
+
+	currentSquare = _board[0][7];
+	currentSquare->_piece = make_shared<Rook>(Rook(Rook::Color::BLACK, currentSquare->_pos));
+	_blackPieces.push_back(currentSquare->_piece);
+
+	currentSquare = _board[7][0];
+	currentSquare->_piece = make_shared<Rook>(Rook(Rook::Color::WHITE, currentSquare->_pos));
+	_whitePieces.push_back(currentSquare->_piece);
+
+	currentSquare = _board[7][7];
+	currentSquare->_piece = make_shared<Rook>(Rook(Rook::Color::WHITE, currentSquare->_pos));
+	_whitePieces.push_back(currentSquare->_piece);
+
+	// Pawn
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		currentSquare = _board[1][i];
+		currentSquare->_piece = make_shared<Pawn>(Pawn(Pawn::Color::BLACK, currentSquare->_pos));
+		_blackPieces.push_back(currentSquare->_piece);
+	}
+
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		currentSquare = _board[6][i];
+		currentSquare->_piece = make_shared<Pawn>(Pawn(Pawn::Color::WHITE, currentSquare->_pos));
+		_whitePieces.push_back(currentSquare->_piece);
+	}
 }
 
 bool Chessboard::isCheck(const King& king) const {

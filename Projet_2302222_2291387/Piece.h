@@ -70,11 +70,14 @@ namespace piecetype {
 	public:
 		King(Color color, Pos pos);
 
+		static void resetKingCounts();
+
 		void updateAggroMoves(interface::Chessboard& board) override;
 		void updateValidMoves(interface::Chessboard& board) override;
-
+		
 	private:
-		static inline int _kingCount = 0;
+		static int _whiteKingCount;
+		static int _blackKingCount;
 	};
 	
 
@@ -91,6 +94,40 @@ namespace piecetype {
 	public:
 		Bishop(Color color, Pos pos);
 
+		void updateAggroMoves(interface::Chessboard& board) override;
+		void updateValidMoves(interface::Chessboard& board) override;
+	};
+
+
+	class Knight : public Piece {
+	public:
+		Knight(Color color, Pos pos);
+
+		void updateAggroMoves(interface::Chessboard& board) override;
+		void updateValidMoves(interface::Chessboard& board) override;
+
+	private:
+		static const std::vector<Pos> _knightMoves;
+	};
+
+
+	class Rook : public Piece {
+	public:
+		Rook(Color color, Pos pos);
+
+		void updateAggroMoves(interface::Chessboard& board) override;
+		void updateValidMoves(interface::Chessboard& board) override;
+
+	private:
+		static const std::vector<Pos> _rookMoves;
+	};
+
+
+	class Pawn : public Piece {
+	public:
+		Pawn(Color color, Pos pos);
+
+		void updateAggroMoves(interface::Chessboard& board) override;
 		void updateValidMoves(interface::Chessboard& board) override;
 	};
 
@@ -99,6 +136,4 @@ namespace piecetype {
 	public:
 		using logic_error::logic_error;
 	};
-
-
 }

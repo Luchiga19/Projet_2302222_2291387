@@ -67,20 +67,23 @@ bool Piece::isInValidMoves(const Pos& pos) {
 
 
 King::King(Color color, Pos pos) : Piece(color, pos) {
-	if (_kingCount < 2) {
-		_kingCount++;
-	}
-	else {
-		throw TooManyKingsException("Trying to generate more than 2 kings.");
-	}
-
-	if (color == Color::BLACK) {
+	if (color == Color::BLACK && _blackKingCount < 1) {
+		_blackKingCount++;
 		_image = QPixmap("Images/black_king.png");
 	}
 
-	else if (color == Color::WHITE) {
+	else if (color == Color::WHITE && _whiteKingCount < 1) {
+		_whiteKingCount++;
 		_image = QPixmap("Images/white_king.png");
 	}
+	else {
+		throw TooManyKingsException("Trying to generate more than a kings per color.");
+	}
+}
+
+void King::resetKingCounts() {
+	_whiteKingCount = 0;
+	_blackKingCount = 0;
 }
 
 void King::updateAggroMoves(interface::Chessboard& board) {
@@ -205,8 +208,7 @@ Bishop::Bishop(Color color, Pos pos) : Piece(color, pos) {
 	}
 }
 
-void Bishop::updateValidMoves(Chessboard& board) {
-	_validMoves.clear();
+void Bishop::updateAggroMoves(Chessboard& board) {
 	Pos initialPos = _pos;
 
 	for (int i = -1; i <= 1; i += 2) {
@@ -221,7 +223,32 @@ void Bishop::updateValidMoves(Chessboard& board) {
 
 				board.insertAggroMove(_pos, getColor());
 
-				if (board[_pos]->isSameColorPiece(*this))
+				if (board[_pos]->isKing() && !board[_pos]->isSameColorPiece(*this)) {
+					_pos += addedPos;
+					board.insertAggroMove(_pos, getColor());
+					break;
+				}
+
+				else if (!board[_pos]->isEmpty())
+					break;
+			}
+			_pos = initialPos;
+		}
+	}
+}
+
+void Bishop::updateValidMoves(Chessboard& board) {
+	_validMoves.clear();
+	Pos initialPos = _pos;
+
+	for (int i = -1; i <= 1; i += 2) {
+		for (int j = -1; j <= 1; j += 2) {
+
+			while (true) {
+				Pos addedPos(i, j);
+				_pos += addedPos;
+
+				if (!_pos.isValid() || board[_pos]->isSameColorPiece(*this))
 					break;
 
 				_validMoves.push_back(_pos);
@@ -232,4 +259,170 @@ void Bishop::updateValidMoves(Chessboard& board) {
 			_pos = initialPos;
 		}
 	}
+}
+
+
+const vector<Pos> Knight::_knightMoves = { Pos(1, 2), Pos(2, 1), Pos(2, -1), Pos(1, -2), Pos(-1, -2), Pos(-2, -1), Pos(-2, 1), Pos(-1, 2) };
+
+Knight::Knight(Color color, Pos pos) : Piece(color, pos) {
+	if (color == Color::BLACK) {
+		_image = QPixmap("Images/black_knight.png");
+	}
+
+	else if (color == Color::WHITE) {
+		_image = QPixmap("Images/white_knight.png");
+	}
+}
+
+void Knight::updateAggroMoves(Chessboard& board) {
+	Pos initialPos = _pos;
+
+	for (const Pos& addedPos : _knightMoves) {
+		_pos += addedPos;
+
+		if (!_pos.isValid()) {
+			_pos = initialPos;
+			continue;
+		}
+
+		board.insertAggroMove(_pos, getColor());
+		_pos = initialPos;
+	}
+}
+
+void Knight::updateValidMoves(Chessboard& board) {
+	_validMoves.clear();
+	Pos initialPos = _pos;
+
+	for (const Pos& addedPos : _knightMoves) {
+		_pos += addedPos;
+
+		if (!_pos.isValid() || board[_pos]->isSameColorPiece(*this)) {
+			_pos = initialPos;
+			continue;
+		}
+
+		_validMoves.push_back(_pos);
+		_pos = initialPos;
+	}
+}
+
+
+const vector<Pos> Rook::_rookMoves = { Pos(0, 1), Pos(1, 0), Pos(0, -1), Pos(-1, 0) };
+
+Rook::Rook(Color color, Pos pos) : Piece(color, pos) {
+	if (color == Color::BLACK) {
+		_image = QPixmap("Images/black_rook.png");
+	}
+
+	else if (color == Color::WHITE) {
+		_image = QPixmap("Images/white_rook.png");
+	}
+}
+
+void Rook::updateAggroMoves(Chessboard& board) {
+	Pos initialPos = _pos;
+
+	for (const Pos& addedPos : _rookMoves) {
+
+		while (true) {
+			_pos += addedPos;
+
+			if (!_pos.isValid())
+				break;
+
+			board.insertAggroMove(_pos, getColor());
+
+			if (board[_pos]->isKing() && !board[_pos]->isSameColorPiece(*this)) {
+				_pos += addedPos;
+				board.insertAggroMove(_pos, getColor());
+				break;
+			}
+
+			else if (!board[_pos]->isEmpty())
+				break;
+		}
+		_pos = initialPos;
+	}
+}
+
+void Rook::updateValidMoves(Chessboard& board) {
+	_validMoves.clear();
+	Pos initialPos = _pos;
+
+	for (const Pos& addedPos : _rookMoves) {
+		while (true) {
+			_pos += addedPos;
+
+			if (!_pos.isValid() || board[_pos]->isSameColorPiece(*this))
+				break;
+
+			_validMoves.push_back(_pos);
+
+			if (!board[_pos]->isEmpty())
+				break;
+		}
+		_pos = initialPos;
+	}
+}
+
+
+Pawn::Pawn(Color color, Pos pos) : Piece(color, pos) {
+	if (color == Color::BLACK) {
+		_image = QPixmap("Images/black_pawn.png");
+	}
+
+	else if (color == Color::WHITE) {
+		_image = QPixmap("Images/white_pawn.png");
+	}
+}
+
+void Pawn::updateAggroMoves(Chessboard& board) {
+	Pos initialPos = _pos;
+
+	for (int i = -1; i <= 1; i += 2) {
+		_pos += Pos(1, i);
+
+		if (!_pos.isValid()) {
+			_pos = initialPos;
+			continue;
+		}
+
+		board.insertAggroMove(_pos, getColor());
+		_pos = initialPos;
+	}
+}
+
+void Pawn::updateValidMoves(Chessboard& board) {
+	_validMoves.clear();
+	Pos initialPos = _pos;
+
+	int direction = (getColor() == Color::BLACK) ? 1 : -1;
+
+	for (int i = -1; i <= 1; i += 2) {
+		_pos += Pos(direction, i);
+
+		if (!_pos.isValid() || board[_pos]->isEmpty() || board[_pos]->isSameColorPiece(*this)) {
+			_pos = initialPos;
+			continue;
+		}
+
+		_validMoves.push_back(_pos);
+		_pos = initialPos;
+	}
+
+	_pos += Pos(direction, 0);
+	
+	if (_pos.isValid() && board[_pos]->isEmpty()) {
+		_validMoves.push_back(_pos);
+
+		if ((initialPos.getRow() == 6 && getColor() == Color::WHITE) || (initialPos.getRow() == 1 && getColor() == Color::BLACK)) {
+			_pos += Pos(direction, 0);
+
+			if (_pos.isValid() && board[_pos]->isEmpty())
+				_validMoves.push_back(_pos);
+		}
+	}
+
+	_pos = initialPos;
 }
