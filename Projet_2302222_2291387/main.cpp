@@ -6,17 +6,15 @@
 int main(int argc, char *argv[]) {
 	QApplication app(argc, argv);
 
-	QWidget window;
-	window.setWindowTitle("Chess");
+	QWidget chessboardWindow;
+	chessboardWindow.setWindowTitle("Chess");
 
-	interface::Chessboard chessboard(&window);
+	interface::Chessboard chessboard(&chessboardWindow);
 
-	QHBoxLayout* layout = new QHBoxLayout(&window);
+	QHBoxLayout* layout = new QHBoxLayout(&chessboardWindow);
 	layout->addWidget(&chessboard);
+	chessboardWindow.setLayout(layout);
 
-	window.setLayout(layout);
-	chessboard.updateTurnMoves();
-
-	window.show();
+	chessboardWindow.show();
 	return app.exec();
 }

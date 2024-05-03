@@ -66,6 +66,9 @@ bool Piece::isInValidMoves(const Pos& pos) {
 }
 
 
+int King::_whiteKingCount = 0;
+int King::_blackKingCount = 0;
+
 King::King(Color color, Pos pos) : Piece(color, pos) {
 	if (color == Color::BLACK && _blackKingCount < 1) {
 		_blackKingCount++;
@@ -380,8 +383,10 @@ Pawn::Pawn(Color color, Pos pos) : Piece(color, pos) {
 void Pawn::updateAggroMoves(Chessboard& board) {
 	Pos initialPos = _pos;
 
+	int direction = (getColor() == Color::BLACK) ? 1 : -1;
+
 	for (int i = -1; i <= 1; i += 2) {
-		_pos += Pos(1, i);
+		_pos += Pos(direction, i);
 
 		if (!_pos.isValid()) {
 			_pos = initialPos;

@@ -244,6 +244,8 @@ void Chessboard::populateStandard() {
 		currentSquare->_piece = make_shared<Pawn>(Pawn(Pawn::Color::WHITE, currentSquare->_pos));
 		_whitePieces.push_back(currentSquare->_piece);
 	}
+
+	updateTurnMoves();
 }
 
 bool Chessboard::isCheck(const King& king) const {
