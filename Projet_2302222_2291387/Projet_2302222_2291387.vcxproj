@@ -98,17 +98,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <QtMoc Include="PromotionDialog.h" />
     <QtMoc Include="Chessboard.h" />
     <QtMoc Include="MainMenu.h" />
-    <QtMoc Include="..\..\..\..\..\OneDrive\Desktop\PromotionDialog.h" />
     <ClInclude Include="Piece.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\OneDrive\Desktop\PromotionDialog.cpp" />
     <ClCompile Include="Chessboard.cpp" />
     <ClCompile Include="MainMenu.cpp" />
     <ClCompile Include="Piece.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="PromotionDialog.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

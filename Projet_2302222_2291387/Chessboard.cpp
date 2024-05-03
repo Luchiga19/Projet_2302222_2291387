@@ -9,6 +9,7 @@
 #include <QMessageBox>
 #include <QPainter>
 #include <QLabel>
+#include "PromotionDialog.h"
 #include <vector>
 #include <algorithm>
 
@@ -46,16 +47,18 @@ void Square::tempMovePiece(Square* square) {
 
 void Square::movePiece(Square* square, Chessboard& board) {
 	if (square->_piece != nullptr && board._currentPlayer == Piece::Color::WHITE)
-		board._blackPieces.erase(remove_if(board._blackPieces.begin(), board._blackPieces.end(),
-			[&](shared_ptr<Piece> piece) { return piece == square->_piece; }), board._blackPieces.end());
+		square->erasePiece(board._blackPieces);
 
 	else if (square->_piece != nullptr && board._currentPlayer == Piece::Color::BLACK)
-		board._whitePieces.erase(remove_if(board._whitePieces.begin(), board._whitePieces.end(),
-			[&](shared_ptr<Piece> piece) { return piece == square->_piece; }), board._whitePieces.end());
+		square->erasePiece(board._whitePieces);
 
 	tempMovePiece(square);
 	square->update();
 	update();
+}
+
+void Square::erasePiece(vector<shared_ptr<Piece>>& pieceList) {
+	pieceList.erase(remove_if(pieceList.begin(), pieceList.end(), [&](shared_ptr<Piece> other) { return other == _piece; }), pieceList.end());
 }
 
 bool Square::isKing() const {
@@ -293,6 +296,41 @@ bool Chessboard::isCheck(const King& king) const {
 		return _validWhiteAggroMoves.end() != std::find(_validWhiteAggroMoves.begin(), _validWhiteAggroMoves.end(), king.getPos());
 }
 
+void Chessboard::checkIfIsPromotion() {
+	if (dynamic_cast<Pawn*>(_sourceSquare->_piece.get()) && ((_sourceSquare->_piece->getColor() == Piece::Color::WHITE && _sourceSquare->_pos.getRow() == 0) ||
+		(_sourceSquare->_piece->getColor() == Piece::Color::BLACK && _sourceSquare->_pos.getRow() == 7))) {
+		PromotionDialog* promoter = new PromotionDialog(this, _sourceSquare->_piece->getColor());
+
+		connect(promoter, &PromotionDialog::queenSelected, this, &Chessboard::queenPromotion);
+		connect(promoter, &PromotionDialog::rookSelected, this, &Chessboard::rookPromotion);
+		connect(promoter, &PromotionDialog::bishopSelected, this, &Chessboard::bishopPromotion);
+		connect(promoter, &PromotionDialog::knightSelected, this, &Chessboard::knightPromotion);
+
+		promoter->exec();
+
+		promoter->deleteLater();
+	}
+	else
+		_sourceSquare = nullptr;
+}
+
+void Chessboard::checkIfEnPassant(Square* square) {
+	if (dynamic_cast<Pawn*>(_sourceSquare->_piece.get())) {
+		int direction = (_sourceSquare->_piece->getColor() == Piece::Color::WHITE) ? -2 : 2;
+		if (_sourceSquare->_pos + Pos(direction, 0) == square->_pos) {
+			_enPassantCheck = &(*this)[_sourceSquare->_pos + Pos(direction / 2, 0)]->_isEnPassant;
+			*_enPassantCheck = true;
+		}
+	}
+}
+
+void Chessboard::removeEnPassantCheck() {
+	if (_enPassantCheck != nullptr) {
+		*_enPassantCheck = false;
+		_enPassantCheck = nullptr;
+	}
+}
+
 void Chessboard::checkIfGameEnded(vector<shared_ptr<Piece>>& teamPieces, shared_ptr<King> teamKing) {
 	for (shared_ptr<Piece> piece : teamPieces) {
 		if (!piece->getValidMoves().empty())
@@ -362,6 +400,14 @@ void Chessboard::setHighlightValidMoves(bool set) {
 	}
 }
 
+template<typename T>
+void Chessboard::piecePromotion() {
+	vector<shared_ptr<Piece>>& teamPieces = (_currentPlayer == Piece::Color::WHITE) ? _whitePieces : _blackPieces;
+	_sourceSquare->erasePiece(teamPieces);
+	_sourceSquare->_piece = make_shared<T>(T(_currentPlayer, _sourceSquare->_pos));
+	teamPieces.push_back(_sourceSquare->_piece);
+}
+
 void Chessboard::onSquareClick(Square* square) {
 	if (_sourceSquare == nullptr && !square->isEmpty() && square->_piece->getColor() == _currentPlayer) {
 		_sourceSquare = square;
@@ -381,10 +427,29 @@ void Chessboard::onSquareClick(Square* square) {
 
 	else if (_sourceSquare != nullptr && _sourceSquare->_piece->isInValidMoves(square->_pos)) {
 		setHighlightValidMoves(false);
+		removeEnPassantCheck();
+		checkIfEnPassant(square);
 		_sourceSquare->movePiece(square, *this);
-		_sourceSquare = nullptr;
+		_sourceSquare = square;
+		checkIfIsPromotion();
 		_currentPlayer = (_currentPlayer == Piece::Color::WHITE) ? Piece::Color::BLACK : Piece::Color::WHITE;
 		resetAggroMoves();
 		updateTurnMoves();
 	}
+}
+
+void Chessboard::queenPromotion() {
+	piecePromotion<Queen>();
+}
+
+void Chessboard::rookPromotion() {
+	piecePromotion<Rook>();
+}
+
+void Chessboard::bishopPromotion() {
+	piecePromotion<Bishop>();
+}
+
+void Chessboard::knightPromotion() {
+	piecePromotion<Knight>();
 }

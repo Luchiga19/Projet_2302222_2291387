@@ -388,12 +388,9 @@ void Pawn::updateAggroMoves(Chessboard& board) {
 	for (int i = -1; i <= 1; i += 2) {
 		_pos += Pos(direction, i);
 
-		if (!_pos.isValid()) {
-			_pos = initialPos;
-			continue;
-		}
+		if (_pos.isValid()) 
+			board.insertAggroMove(_pos, getColor());
 
-		board.insertAggroMove(_pos, getColor());
 		_pos = initialPos;
 	}
 }
@@ -407,12 +404,14 @@ void Pawn::updateValidMoves(Chessboard& board) {
 	for (int i = -1; i <= 1; i += 2) {
 		_pos += Pos(direction, i);
 
-		if (!_pos.isValid() || board[_pos]->isEmpty() || board[_pos]->isSameColorPiece(*this)) {
-			_pos = initialPos;
-			continue;
+		if (_pos.isValid() && !board[_pos]->isEmpty() && !board[_pos]->isSameColorPiece(*this))
+			_validMoves.push_back(_pos);
+
+		else if (_pos.isValid() && board[_pos]->isEnPassant()) {
+			_validMoves.push_back(_pos);
+			board[_pos]->enPassant();
 		}
 
-		_validMoves.push_back(_pos);
 		_pos = initialPos;
 	}
 

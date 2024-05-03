@@ -9,6 +9,7 @@
 #include <span>
 #include <QPixmap>
 #include <stdexcept>
+#include "PromotionDialog.h"
 #include <set>
 
 
@@ -28,7 +29,10 @@ namespace interface {
 
 		void tempMovePiece(Square* square);
 		void movePiece(Square* square, Chessboard& board);
+		void erasePiece(std::vector<std::shared_ptr<piecetype::Piece>>& pieceList);
 
+		bool isEnPassant() const { return _isEnPassant; }
+		void enPassant();
 		bool isKing() const;
 		bool isEmpty() const;
 		bool isSameColorPiece(const piecetype::Piece& other) const;
@@ -41,6 +45,7 @@ namespace interface {
 
 	private:
 		bool _isContour = false;
+		bool _isEnPassant = false;
 
 		QPixmap _contour;
 		piecetype::Pos _pos;
@@ -103,6 +108,9 @@ namespace interface {
 		void populateEndgame();
 
 		bool isCheck(const piecetype::King& king) const;
+		void checkIfIsPromotion();
+		void checkIfEnPassant(Square* square);
+		void removeEnPassantCheck();
 		void checkIfGameEnded(std::vector<std::shared_ptr<piecetype::Piece>>& teamPieces, std::shared_ptr<piecetype::King> teamKing);
 
 		void insertAggroMove(const piecetype::Pos& pos, const piecetype::Piece::Color& color);
@@ -111,20 +119,25 @@ namespace interface {
 
 		void setHighlightValidMoves(bool set);
 
+		template<typename T>
+		void piecePromotion();
+
 	signals:
 		void gameEnded();
+
+	public slots:
+		void onSquareClick(Square* square);
 
 		void queenPromotion();
 		void rookPromotion();
 		void bishopPromotion();
 		void knightPromotion();
 
-	public slots:
-		void onSquareClick(Square* square);
-
 	private:
 		piecetype::Piece::Color _currentPlayer;
 		Square* _sourceSquare = nullptr;
+
+		bool* _enPassantCheck = nullptr;
 
 		std::shared_ptr<piecetype::King> _whiteKing;
 		std::shared_ptr<piecetype::King> _blackKing;
