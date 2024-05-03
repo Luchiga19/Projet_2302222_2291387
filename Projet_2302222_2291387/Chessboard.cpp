@@ -138,6 +138,26 @@ Chessboard::Chessboard(QWidget* parent) :
 	}
 
 	layout->setSizeConstraint(QLayout::SetFixedSize);
+
+	for (int col = 0; col < BOARD_SIZE; col++) {
+		QString labelText = QString("%1 ").arg(QChar('a' + col));
+		QLabel* label = new QLabel(labelText, this);
+		
+		label->setFont(QFont("Arial", 11, QFont::Bold));
+		label->setStyleSheet((1 + col) % 2 == 0 ? "color: rgb(255, 209, 181);" : "color: white;");
+
+		layout->addWidget(label, 7, col, Qt::AlignBottom | Qt::AlignRight);
+	}
+
+	for (int row = 0; row < BOARD_SIZE; row++) {
+		QString labelText = QString(" %1").arg(8 - row);
+		QLabel* label = new QLabel(labelText, this);
+
+		label->setFont(QFont("Arial", 11, QFont::Bold));
+		label->setStyleSheet((row) % 2 == 0 ? "color: rgb(255, 209, 181);" : "color: white;");
+
+		layout->addWidget(label, row, 0, Qt::AlignTop | Qt::AlignLeft);
+	}
 	
 	setLayout(layout);
 };
