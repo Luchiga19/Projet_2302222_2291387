@@ -114,6 +114,11 @@ namespace interface {
 	signals:
 		void gameEnded();
 
+		void queenPromotion();
+		void rookPromotion();
+		void bishopPromotion();
+		void knightPromotion();
+
 	public slots:
 		void onSquareClick(Square* square);
 

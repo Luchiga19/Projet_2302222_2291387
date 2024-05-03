@@ -130,7 +130,7 @@ Chessboard::Chessboard(QWidget* parent) :
 	for (int row = 0; row < BOARD_SIZE; row++) {
 		for (int col = 0; col < BOARD_SIZE; col++) {
 			Square* square = new Square(this, Pos(row, col));
-			QObject::connect(square, &Square::squareClicked, this, &Chessboard::onSquareClick);
+			connect(square, &Square::squareClicked, this, &Chessboard::onSquareClick);
 			square->_color = ((row + col) % 2 == 0 ? Qt::white : QColor(255, 209, 181));
 			layout->addWidget(square, row, col);
 			_board[row][col] = square;
@@ -158,7 +158,7 @@ Chessboard::Chessboard(QWidget* parent) :
 
 		layout->addWidget(label, row, 0, Qt::AlignTop | Qt::AlignLeft);
 	}
-	
+
 	setLayout(layout);
 };
 
