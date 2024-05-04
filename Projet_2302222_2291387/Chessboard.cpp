@@ -21,6 +21,7 @@ using namespace piecetype;
 
 Square::Square(QWidget* parent, Pos pos) :
 	_contour(QPixmap("Images/contour.png")),
+	_check(QPixmap("Images/check.png")),
 	_pos(pos),
 	QWidget(parent),
 	_piece(nullptr)
@@ -38,6 +39,9 @@ void Square::paintEvent(QPaintEvent* event) {
 	
 	if (_isContour) 
 		painter.drawPixmap(rect(), _contour);
+
+	if (_isCheck)
+		painter.drawPixmap(rect(), _check);
 }
 
 void Square::tempMovePiece(Square* square) {
@@ -52,6 +56,13 @@ void Square::movePiece(Square* square, Chessboard& board) {
 	else if (square->_piece != nullptr && board._currentPlayer == Piece::Color::BLACK)
 		square->erasePiece(board._whitePieces);
 
+	else if (square->isEnPassant() && dynamic_cast<Pawn*>(_piece.get())) {
+		if (_piece->getColor() == Piece::Color::WHITE)
+			board[square->_pos + Pos(1, 0)]->erasePiece(board._blackPieces);
+		else if(_piece->getColor() == Piece::Color::BLACK)
+			board[square->_pos + Pos(-1, 0)]->erasePiece(board._whitePieces);
+	}
+
 	tempMovePiece(square);
 	square->update();
 	update();
@@ -59,6 +70,8 @@ void Square::movePiece(Square* square, Chessboard& board) {
 
 void Square::erasePiece(vector<shared_ptr<Piece>>& pieceList) {
 	pieceList.erase(remove_if(pieceList.begin(), pieceList.end(), [&](shared_ptr<Piece> other) { return other == _piece; }), pieceList.end());
+	_piece.reset();
+	update();
 }
 
 bool Square::isKing() const {
@@ -198,6 +211,16 @@ void Chessboard::clearBoard() {
 	_currentPlayer = Piece::Color::WHITE;
 	_sourceSquare = nullptr;
 
+	if (_enPassantCheckWhite != nullptr)
+		*_enPassantCheckWhite = false;
+	_enPassantCheckWhite = nullptr;
+
+	if (_enPassantCheckBlack != nullptr)
+		*_enPassantCheckBlack = false;
+	_enPassantCheckBlack = nullptr;
+
+	_checkPos.reset();
+
 	_whiteKing.reset();
 	_blackKing.reset();
 
@@ -317,17 +340,19 @@ void Chessboard::checkIfIsPromotion() {
 void Chessboard::checkIfEnPassant(Square* square) {
 	if (dynamic_cast<Pawn*>(_sourceSquare->_piece.get())) {
 		int direction = (_sourceSquare->_piece->getColor() == Piece::Color::WHITE) ? -2 : 2;
+		bool*& enPassantCheck = (_sourceSquare->_piece->getColor() == Piece::Color::WHITE) ? _enPassantCheckWhite : _enPassantCheckBlack;
 		if (_sourceSquare->_pos + Pos(direction, 0) == square->_pos) {
-			_enPassantCheck = &(*this)[_sourceSquare->_pos + Pos(direction / 2, 0)]->_isEnPassant;
-			*_enPassantCheck = true;
+			enPassantCheck = &(*this)[_sourceSquare->_pos + Pos(direction / 2, 0)]->_isEnPassant;
+			*enPassantCheck = true;
 		}
 	}
 }
 
 void Chessboard::removeEnPassantCheck() {
-	if (_enPassantCheck != nullptr) {
-		*_enPassantCheck = false;
-		_enPassantCheck = nullptr;
+	bool*& enPassantCheck = (_currentPlayer == Piece::Color::WHITE) ? _enPassantCheckWhite : _enPassantCheckBlack;
+	if (enPassantCheck != nullptr) {
+		*enPassantCheck = false;
+		enPassantCheck = nullptr;
 	}
 }
 
@@ -380,9 +405,9 @@ void Chessboard::updateTurnMoves() {
 			
 			TempCheckMove tempMove((*this)[piece->getPos()], (*this)[pos]);
 			resetAggroMoves();
-			for (shared_ptr<Piece> piece : enemyPieces)
-				if (piece->getPos() != pos)
-					piece->updateAggroMoves(*this);
+			for (shared_ptr<Piece> enemyPiece : enemyPieces)
+				if (enemyPiece->getPos() != pos)
+					enemyPiece->updateAggroMoves(*this);
 			if (isCheck(*teamKing))
 				invalidMoves.push_back(pos);
 		}
@@ -390,7 +415,26 @@ void Chessboard::updateTurnMoves() {
 			piece->removeValidMove(invalidMoves);
 	}
 
+	if (isCheck(*teamKing))
+		setHighlightCheck(*teamKing);
+
 	checkIfGameEnded(teamPieces, teamKing);
+}
+
+void Chessboard::setHighlightCheck(const piecetype::King& king) {
+	_checkPos = make_shared<Pos>(Pos(king.getPos()));
+	Square* square = (*this)[*_checkPos];
+	square->_isCheck = true;
+	square->update();
+}
+
+void Chessboard::removeHighlightCheck() {
+	if (_checkPos != nullptr) {
+		Square* square = (*this)[*_checkPos];
+		square->_isCheck = false;
+		square->update();
+		_checkPos.reset();
+	}
 }
 
 void Chessboard::setHighlightValidMoves(bool set) {
@@ -406,6 +450,7 @@ void Chessboard::piecePromotion() {
 	_sourceSquare->erasePiece(teamPieces);
 	_sourceSquare->_piece = make_shared<T>(T(_currentPlayer, _sourceSquare->_pos));
 	teamPieces.push_back(_sourceSquare->_piece);
+	_sourceSquare = nullptr;
 }
 
 void Chessboard::onSquareClick(Square* square) {
@@ -430,6 +475,7 @@ void Chessboard::onSquareClick(Square* square) {
 		removeEnPassantCheck();
 		checkIfEnPassant(square);
 		_sourceSquare->movePiece(square, *this);
+		removeHighlightCheck();
 		_sourceSquare = square;
 		checkIfIsPromotion();
 		_currentPlayer = (_currentPlayer == Piece::Color::WHITE) ? Piece::Color::BLACK : Piece::Color::WHITE;

@@ -32,7 +32,6 @@ namespace interface {
 		void erasePiece(std::vector<std::shared_ptr<piecetype::Piece>>& pieceList);
 
 		bool isEnPassant() const { return _isEnPassant; }
-		void enPassant();
 		bool isKing() const;
 		bool isEmpty() const;
 		bool isSameColorPiece(const piecetype::Piece& other) const;
@@ -45,9 +44,12 @@ namespace interface {
 
 	private:
 		bool _isContour = false;
+		bool _isCheck = false;
 		bool _isEnPassant = false;
+		bool _isEnPassantForEnemy = false;
 
 		QPixmap _contour;
+		QPixmap _check;
 		piecetype::Pos _pos;
 		std::shared_ptr<piecetype::Piece> _piece;
 		QColor _color;
@@ -117,6 +119,8 @@ namespace interface {
 		void resetAggroMoves();
 		void updateTurnMoves();
 
+		void setHighlightCheck(const piecetype::King& king);
+		void removeHighlightCheck();
 		void setHighlightValidMoves(bool set);
 
 		template<typename T>
@@ -136,8 +140,10 @@ namespace interface {
 	private:
 		piecetype::Piece::Color _currentPlayer;
 		Square* _sourceSquare = nullptr;
+		std::shared_ptr<piecetype::Pos> _checkPos = nullptr;
 
-		bool* _enPassantCheck = nullptr;
+		bool* _enPassantCheckWhite = nullptr;
+		bool* _enPassantCheckBlack = nullptr;
 
 		std::shared_ptr<piecetype::King> _whiteKing;
 		std::shared_ptr<piecetype::King> _blackKing;
