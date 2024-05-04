@@ -159,13 +159,7 @@ void Queen::updateAggroMoves(Chessboard& board) {
 
 				board.insertAggroMove(_pos, getColor());
 
-				if (board[_pos]->isKing() && !board[_pos]->isSameColorPiece(*this)) {
-					_pos += addedPos;
-					board.insertAggroMove(_pos, getColor());
-					break;
-				}
-
-				else if (!board[_pos]->isEmpty())
+				if (!board[_pos]->isEmpty())
 					break;
 			}
 			_pos = initialPos;
@@ -226,13 +220,7 @@ void Bishop::updateAggroMoves(Chessboard& board) {
 
 				board.insertAggroMove(_pos, getColor());
 
-				if (board[_pos]->isKing() && !board[_pos]->isSameColorPiece(*this)) {
-					_pos += addedPos;
-					board.insertAggroMove(_pos, getColor());
-					break;
-				}
-
-				else if (!board[_pos]->isEmpty())
+				if (!board[_pos]->isEmpty())
 					break;
 			}
 			_pos = initialPos;
@@ -336,13 +324,7 @@ void Rook::updateAggroMoves(Chessboard& board) {
 
 			board.insertAggroMove(_pos, getColor());
 
-			/*if (board[_pos]->isKing() && !board[_pos]->isSameColorPiece(*this)) {
-				_pos += addedPos;
-				board.insertAggroMove(_pos, getColor());
-				break;
-			}*/
-
-			/*else */if (!board[_pos]->isEmpty())
+			if (!board[_pos]->isEmpty())
 				break;
 		}
 		_pos = initialPos;
@@ -404,7 +386,7 @@ void Pawn::updateValidMoves(Chessboard& board) {
 	for (int i = -1; i <= 1; i += 2) {
 		_pos += Pos(direction, i);
 
-		if (_pos.isValid() && ((!board[_pos]->isEmpty() && !board[_pos]->isSameColorPiece(*this)) || board[_pos]->isEnPassant()))
+		if (_pos.isValid() && ((!board[_pos]->isEmpty() && !board[_pos]->isSameColorPiece(*this)) || board[_pos]->isEnPassant(getColor())))
 			_validMoves.push_back(_pos);
 
 		_pos = initialPos;

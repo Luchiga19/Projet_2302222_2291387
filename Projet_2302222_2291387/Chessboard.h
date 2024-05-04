@@ -31,7 +31,7 @@ namespace interface {
 		void movePiece(Square* square, Chessboard& board);
 		void erasePiece(std::vector<std::shared_ptr<piecetype::Piece>>& pieceList);
 
-		bool isEnPassant() const { return _isEnPassant; }
+		bool isEnPassant(piecetype::Piece::Color color) const;
 		bool isKing() const;
 		bool isEmpty() const;
 		bool isSameColorPiece(const piecetype::Piece& other) const;
@@ -45,8 +45,8 @@ namespace interface {
 	private:
 		bool _isContour = false;
 		bool _isCheck = false;
-		bool _isEnPassant = false;
-		bool _isEnPassantForEnemy = false;
+		bool _isEnPassantBlack = false;
+		bool _isEnPassantWhite = false;
 
 		QPixmap _contour;
 		QPixmap _check;

@@ -56,7 +56,7 @@ void Square::movePiece(Square* square, Chessboard& board) {
 	else if (square->_piece != nullptr && board._currentPlayer == Piece::Color::BLACK)
 		square->erasePiece(board._whitePieces);
 
-	else if (square->isEnPassant() && dynamic_cast<Pawn*>(_piece.get())) {
+	else if (square->isEnPassant(_piece->getColor()) && dynamic_cast<Pawn*>(_piece.get())) {
 		if (_piece->getColor() == Piece::Color::WHITE)
 			board[square->_pos + Pos(1, 0)]->erasePiece(board._blackPieces);
 		else if(_piece->getColor() == Piece::Color::BLACK)
@@ -72,6 +72,14 @@ void Square::erasePiece(vector<shared_ptr<Piece>>& pieceList) {
 	pieceList.erase(remove_if(pieceList.begin(), pieceList.end(), [&](shared_ptr<Piece> other) { return other == _piece; }), pieceList.end());
 	_piece.reset();
 	update();
+}
+
+bool Square::isEnPassant(Piece::Color color) const {
+	if (color == Piece::Color::WHITE)
+		return _isEnPassantWhite;
+
+	else if (color == Piece::Color::BLACK)
+		return _isEnPassantBlack;
 }
 
 bool Square::isKing() const {
@@ -341,8 +349,12 @@ void Chessboard::checkIfEnPassant(Square* square) {
 	if (dynamic_cast<Pawn*>(_sourceSquare->_piece.get())) {
 		int direction = (_sourceSquare->_piece->getColor() == Piece::Color::WHITE) ? -2 : 2;
 		bool*& enPassantCheck = (_sourceSquare->_piece->getColor() == Piece::Color::WHITE) ? _enPassantCheckWhite : _enPassantCheckBlack;
-		if (_sourceSquare->_pos + Pos(direction, 0) == square->_pos) {
-			enPassantCheck = &(*this)[_sourceSquare->_pos + Pos(direction / 2, 0)]->_isEnPassant;
+		if (_sourceSquare->_pos + Pos(direction, 0) == square->_pos && _sourceSquare->_piece->getColor() == Piece::Color::WHITE) {
+			enPassantCheck = &(*this)[_sourceSquare->_pos + Pos(direction / 2, 0)]->_isEnPassantBlack;
+			*enPassantCheck = true;
+		}
+		else if (_sourceSquare->_pos + Pos(direction, 0) == square->_pos && _sourceSquare->_piece->getColor() == Piece::Color::BLACK) {
+			enPassantCheck = &(*this)[_sourceSquare->_pos + Pos(direction / 2, 0)]->_isEnPassantWhite;
 			*enPassantCheck = true;
 		}
 	}
@@ -398,6 +410,9 @@ void Chessboard::updateTurnMoves() {
 	for (shared_ptr<Piece> piece : enemyPieces)
 		piece->updateAggroMoves(*this);
 
+	if (isCheck(*teamKing))
+		setHighlightCheck(*teamKing);
+
 	for (shared_ptr<Piece> piece : teamPieces) {
 		piece->updateValidMoves(*this);
 		vector<Pos> invalidMoves;
@@ -414,9 +429,6 @@ void Chessboard::updateTurnMoves() {
 		if (!invalidMoves.empty())
 			piece->removeValidMove(invalidMoves);
 	}
-
-	if (isCheck(*teamKing))
-		setHighlightCheck(*teamKing);
 
 	checkIfGameEnded(teamPieces, teamKing);
 }
